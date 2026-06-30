@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Paris Planner">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Paris Home Planner</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F1F5F9;--surface:#FFFFFF;--blue:#2563EB;--blue-lt:#EFF6FF;--blue-dk:#1D4ED8;
+  --green:#059669;--green-lt:#ECFDF5;--amber:#D97706;--amber-lt:#FFFBEB;
+  --red:#DC2626;--red-lt:#FEF2F2;--purple:#7C3AED;--purple-lt:#F5F3FF;
+  --text:#0F172A;--muted:#64748B;--border:#E2E8F0;
+  --radius:14px;--radius-sm:8px;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.04);
+  --nav-w:220px;--font:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+.nav{width:var(--nav-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;padding:0 12px 24px}
+.nav-brand{padding:22px 8px 18px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.nav-brand .flag{font-size:22px}
+.nav-brand h1{font-size:15px;font-weight:700;color:var(--text);line-height:1.3;margin-top:6px}
+.nav-brand p{font-size:11px;color:var(--muted);margin-top:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--muted);font-size:13.5px;font-weight:500;transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item .icon{font-size:18px;width:22px;text-align:center;flex-shrink:0}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--blue-lt);color:var(--blue);font-weight:600}
+.nav-section-label{font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--muted);padding:16px 12px 4px;text-transform:uppercase}
+.nav-spacer{flex:1}
+.nav-footer{padding:12px;background:var(--bg);border-radius:var(--radius-sm);font-size:11px;color:var(--muted);line-height:1.5}
+.main{margin-left:var(--nav-w);flex:1;min-height:100vh}
+.screen{display:none;padding:28px 32px;max-width:860px}
+.screen.active{display:block}
+.screen-header{margin-bottom:24px}
+.screen-header h2{font-size:22px;font-weight:700;color:var(--text)}
+.screen-header p{font-size:14px;color:var(--muted);margin-top:4px}
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-bottom:14px}
+.card-label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.card-value{font-size:32px;font-weight:800;color:var(--text);line-height:1.1}
+.card-value.blue{color:var(--blue)}.card-value.green{color:var(--green)}.card-value.amber{color:var(--amber)}
+.card-sub{font-size:12px;color:var(--muted);margin-top:5px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.hero-card{border-radius:var(--radius);padding:26px;color:white;margin-bottom:14px;box-shadow:0 4px 24px rgba(37,99,235,.35)}
+.hero-card.blue-grad{background:linear-gradient(135deg,#1E40AF 0%,#2563EB 60%,#3B82F6 100%)}
+.hero-card.green-grad{background:linear-gradient(135deg,#064E3B,#059669);box-shadow:0 4px 24px rgba(5,150,105,.3)}
+.hero-card .label{font-size:12px;font-weight:600;opacity:.75;letter-spacing:.5px;text-transform:uppercase}
+.hero-card .amount{font-size:44px;font-weight:800;margin:6px 0 4px;line-height:1}
+.hero-card .sub{font-size:13px;opacity:.8}
+.hero-meta{display:flex;gap:20px;margin-top:18px}
+.hero-meta .hm .hm-label{font-size:11px;opacity:.7}
+.hero-meta .hm .hm-val{font-size:17px;font-weight:700;margin-top:2px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.stat-pill{background:var(--surface);border-radius:var(--radius-sm);padding:14px 16px;box-shadow:var(--shadow)}
+.stat-pill .sp-label{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px}
+.stat-pill .sp-val{font-size:18px;font-weight:800;color:var(--text)}
+.stat-pill .sp-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.stat-pill.green .sp-val{color:var(--green)}.stat-pill.blue .sp-val{color:var(--blue)}.stat-pill.amber .sp-val{color:var(--amber)}.stat-pill.red .sp-val{color:var(--red)}
+.insight{border-radius:var(--radius-sm);padding:13px 15px;font-size:13px;display:flex;align-items:flex-start;gap:10px;line-height:1.5;margin-bottom:14px}
+.insight.blue{background:var(--blue-lt);border-left:3px solid var(--blue);color:#1E40AF}
+.insight.green{background:var(--green-lt);border-left:3px solid var(--green);color:#065F46}
+.insight.amber{background:var(--amber-lt);border-left:3px solid var(--amber);color:#92400E}
+.insight.red{background:var(--red-lt);border-left:3px solid var(--red);color:#991B1B}
+.insight .icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.insight strong{display:block;font-weight:700;margin-bottom:2px}
+.row-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.row-item:last-child{border-bottom:none}
+.ri-label{font-size:14px;color:var(--text);font-weight:500}
+.ri-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.ri-val{font-size:16px;font-weight:700;color:var(--text);text-align:right;white-space:nowrap}
+.ri-val.green{color:var(--green)}.ri-val.blue{color:var(--blue)}.ri-val.red{color:var(--red)}.ri-val.amber{color:var(--amber)}.ri-val.muted{color:var(--muted);font-weight:500;font-size:14px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge.green{background:var(--green-lt);color:var(--green)}.badge.blue{background:var(--blue-lt);color:var(--blue)}.badge.amber{background:var(--amber-lt);color:var(--amber)}.badge.red{background:var(--red-lt);color:var(--red)}
+.scenario{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:13px 15px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+.scenario.best{border-color:var(--green);background:var(--green-lt)}
+.sc-rate .r{font-size:20px;font-weight:800}.sc-rate .rl{font-size:11px;color:var(--muted);margin-top:1px}
+.sc-divider{width:1px;height:32px;background:var(--border);flex-shrink:0}
+.sc-amount{flex:1}.sc-amount .a{font-size:19px;font-weight:700}.sc-amount .al{font-size:12px;color:var(--muted)}
+.sc-monthly .m{font-size:15px;font-weight:700;color:var(--blue)}.sc-monthly .ml{font-size:11px;color:var(--muted)}
+.scenario.best .sc-rate .r{color:var(--green)}.scenario.best .sc-monthly .m{color:var(--green)}
+.form-section{margin-bottom:20px}
+.form-section-title{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px}
+.field .hint{font-weight:400;color:var(--muted);font-size:12px;margin-left:4px}
+.input-wrap{position:relative}
+.input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;font-weight:600;pointer-events:none}
+.input-wrap .suffix{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+input[type=number],input[type=text],select{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font);color:var(--text);background:var(--surface);transition:border-color .15s;appearance:none;-webkit-appearance:none}
+.input-wrap input[type=number]{padding-left:27px}
+.input-wrap.has-suffix input[type=number]{padding-right:30px}
+input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.calc-btn{width:100%;padding:13px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;transition:background .15s}
+.calc-btn:hover{background:var(--blue-dk)}
+.toggle-switch{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.toggle-switch input{display:none}
+.toggle-track{width:42px;height:24px;background:var(--border);border-radius:12px;position:relative;transition:background .2s;flex-shrink:0}
+.toggle-track::after{content:;position:absolute;width:18px;height:18px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle-switch input:checked+.toggle-track{background:var(--green)}
+.toggle-switch input:checked+.toggle-track::after{transform:translateX(18px)}
+.toggle-label{font-size:13px;font-weight:600;color:var(--text)}
+.mode-bar{display:flex;background:var(--surface);border-radius:var(--radius-sm);padding:5px;box-shadow:var(--shadow);margin-bottom:16px;gap:5px}
+.mode-btn{flex:1;padding:8px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s}
+.mode-btn.active{background:var(--blue);color:white;box-shadow:0 2px 8px rgba(37,99,235,.3)}
+.whatif-panel{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px;margin-bottom:14px}
+.whatif-title{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.whatif-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.whatif-row:last-child{border-bottom:none}
+.whatif-left{flex:1}
+.whatif-name{font-size:14px;font-weight:600;color:var(--text)}
+.whatif-impact{font-size:12px;margin-top:2px}
+.whatif-impact.pos{color:var(--green)}.whatif-impact.neg{color:var(--red)}
+.meter-wrap{margin:10px 0 6px}
+.meter-bg{height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+.meter-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.meter-fill.green{background:var(--green)}.meter-fill.amber{background:var(--amber)}.meter-fill.red{background:var(--red)}
+.meter-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.tranche-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.tranche-item{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:13px}
+.tranche-item.active{border-color:var(--green);background:var(--green-lt)}
+.ti-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.ti-amount{font-size:20px;font-weight:800;margin:4px 0 2px}
+.tranche-item.active .ti-amount{color:var(--green)}
+.ti-sub{font-size:11px;color:var(--muted)}
+.zone-diagram{position:relative;height:300px;display:flex;align-items:center;justify-content:center;margin:16px 0}
+.zone-ring{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center}
+.zone-r4{width:280px;height:220px;background:#FEF3C7;border:2px solid #D97706}
+.zone-r3{width:210px;height:165px;background:#DBEAFE;border:2px solid #3B82F6}
+.zone-r2{width:148px;height:116px;background:#BFDBFE;border:2px solid #2563EB}
+.zone-r1{width:84px;height:66px;background:#1E40AF;border:2px solid #1E3A8A;color:white;flex-direction:column}
+.zone-tag{position:absolute;font-size:10px;font-weight:700;background:white;padding:2px 7px;border-radius:10px;white-space:nowrap;border:1px solid #ccc}
+.zone-center-label{font-size:10px;font-weight:800;line-height:1.3}
+.commune-list{display:flex;flex-direction:column;gap:6px}
+.commune-row{display:flex;align-items:center;gap:8px;font-size:13px}
+.commune-row .cn{font-weight:600;color:var(--text);min-width:180px}
+.commune-row .cz{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.compare-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.cmp{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.cmp .cmp-head{padding:14px 18px;font-size:14px;font-weight:700}
+.cmp.new .cmp-head{background:var(--green-lt);color:var(--green)}
+.cmp.old .cmp-head{background:var(--amber-lt);color:var(--amber)}
+.cmp .cmp-body{background:var(--surface);padding:0 18px}
+.cmp .cmp-row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.cmp .cmp-row:last-child{border-bottom:none}
+.cmp .cmp-key{color:var(--muted)}
+.cmp.new .cmp-val{font-weight:700;color:var(--green)}
+.cmp.old .cmp-val{font-weight:700;color:var(--amber)}
+.verdict-card{border-radius:var(--radius);padding:18px 22px;color:white;margin-bottom:14px}
+.vc-label{font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:.5px}
+.vc-title{font-size:19px;font-weight:800;margin:4px 0 6px}
+.vc-body{font-size:13px;opacity:.9;line-height:1.6}
+.proc-toggle{display:flex;gap:8px;margin-bottom:18px}
+.proc-toggle button{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s}
+.proc-toggle button.active{border-color:var(--blue);background:var(--blue-lt);color:var(--blue)}
+.step-item{display:flex;gap:16px;margin-bottom:18px}
+.step-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.step-num{width:34px;height:34px;border-radius:50%;background:var(--blue);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.step-line{width:2px;flex:1;background:var(--border);margin-top:5px;min-height:18px}
+.step-item:last-child .step-line{display:none}
+.step-content{padding-top:5px;flex:1}
+.step-title{font-size:14px;font-weight:700;color:var(--text)}
+.step-note{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
+.step-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.step-pill{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--muted)}
+.step-duration{font-size:11px;color:var(--blue);font-weight:600;margin-top:7px}
+.budget-bar{height:12px;border-radius:6px;background:var(--border);overflow:hidden;margin:10px 0 6px;display:flex}
+.budget-bar .seg{height:100%;transition:width .4s ease}
+.bar-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.gloss-search{position:relative;margin-bottom:14px}
+.gloss-search .gs-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none}
+.gloss-search input{padding:10px 14px 10px 40px;border:1.5px solid var(--border);border-radius:var(--radius-sm)}
+.gloss-item{padding:13px 0;border-bottom:1px solid var(--border)}
+.gloss-item:last-child{border-bottom:none}
+.gloss-term{font-size:14px;font-weight:700;color:var(--blue);margin-bottom:3px}
+.gloss-def{font-size:13px;color:var(--muted);line-height:1.55}
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 100px)}
+.chat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.chat-limit-badge{background:var(--blue-lt);border:1px solid var(--blue);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--blue);display:flex;align-items:center;gap:6px}
+.chat-limit-badge .ql-num{font-size:15px;font-weight:800}
+.chat-messages{flex:1;overflow-y:auto;padding:4px 2px;display:flex;flex-direction:column;gap:12px;min-height:200px;max-height:420px}
+.chat-bubble{max-width:82%;border-radius:18px;padding:11px 15px;font-size:14px;line-height:1.55}
+.chat-bubble.bot{background:var(--surface);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px}
+.chat-bubble.user{background:var(--blue);color:white;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-bubble.bot strong{color:var(--blue)}
+.chat-bubble.typing{display:flex;gap:5px;align-items:center;padding:14px 18px}
+.typing-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);animation:bounce .9s infinite}
+.typing-dot:nth-child(2){animation-delay:.15s}.typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 10px}
+.chat-chip{background:var(--surface);border:1.5px solid var(--blue);border-radius:20px;padding:6px 13px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;transition:all .15s;white-space:nowrap}
+.chat-chip:hover{background:var(--blue);color:white}
+.chat-input-row{display:flex;gap:10px;margin-top:12px}
+.chat-input-row input{flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:50px;font-size:14px;font-family:var(--font)}
+.chat-input-row input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.chat-send{width:44px;height:44px;background:var(--blue);border:none;border-radius:50%;cursor:pointer;color:white;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.chat-send:hover{background:var(--blue-dk)}
+.chat-disclaimer{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.5}
+
+/* ── MOBILE RESPONSIVE ───────────────────────────────────────────── */
+.mob-nav{display:none}
+@media(max-width:640px){
+  :root{--nav-w:0px}
+  .nav{display:none}
+  .main{margin-left:0;padding-bottom:72px}
+  .screen{padding:18px 16px}
+  .hero-card .amount{font-size:32px}
+  .hero-meta{flex-wrap:wrap;gap:14px}
+  .grid-2,.field-row{grid-template-columns:1fr}
+  .compare-wrap{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .tranche-grid{grid-template-columns:1fr 1fr}
+  .chat-bubble{max-width:95%}
+  .zone-diagram{height:220px}
+  .zone-r4{width:200px;height:160px}
+  .zone-r3{width:150px;height:120px}
+  .zone-r2{width:106px;height:85px}
+  .zone-r1{width:60px;height:48px}
+  .commune-row{flex-wrap:wrap;gap:4px}
+  .commune-row .cn{min-width:unset}
+  .mode-bar{flex-direction:column;gap:4px}
+
+  /* bottom nav */
+  .mob-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;height:60px;
+    background:var(--surface);border-top:1px solid var(--border);
+    z-index:200;padding:0 4px;align-items:stretch;
+    box-shadow:0 -2px 12px rgba(0,0,0,.08)
+  }
+  .mob-nav-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;border:none;background:none;cursor:pointer;color:var(--muted);
+    font-size:10px;font-weight:600;padding:4px 2px;border-radius:8px;transition:color .15s
+  }
+  .mob-nav-item .mni{font-size:20px;line-height:1}
+  .mob-nav-item.active{color:var(--blue)}
+  .mob-nav-item.active .mni{filter:drop-shadow(0 0 4px rgba(37,99,235,.4))}
+
+  /* show screen title bar on mobile */
+  .screen-header h2{font-size:18px}
+  .screen-header p{font-size:13px}
+  .card{padding:16px}
+  .card-value{font-size:26px}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand"><div class="flag">&#127467;&#127479;</div><h1>Paris Home Planner</h1><p>First-time buyer toolkit</p></div>
+  <div class="nav-section-label">Planning</div>
+  <button class="nav-item active" onclick="go('overview',this)"><span class="icon">&#127968;</span> Overview</button>
+  <button class="nav-item" onclick="go('profile',this)"><span class="icon">&#128100;</span> My Profile</button>
+  <div class="nav-section-label">Analysis</div>
+  <button class="nav-item" onclick="go('mortgage',this)"><span class="icon">&#128202;</span> Mortgage</button>
+  <button class="nav-item" onclick="go('subsidies',this)"><span class="icon">&#127963;</span> PTZ &amp; Loans</button>
+  <button class="nav-item" onclick="go('budget',this)"><span class="icon">&#128176;</span> Budget Plan</button>
+  <div class="nav-section-label">Explore</div>
+  <button class="nav-item" onclick="go('compare',this)"><span class="icon">&#9878;&#65039;</span> New vs Old</button>
+  <button class="nav-item" onclick="go('process',this)"><span class="icon">&#128203;</span> Process</button>
+  <button class="nav-item" onclick="go('glossary',this)"><span class="icon">&#128214;</span> Glossary</button>
+  <div class="nav-section-label">Help</div>
+  <button class="nav-item" onclick="go('chat',this)"><span class="icon">&#128172;</span> Ask a Question</button>
+  <div class="nav-spacer"></div>
+  <div class="nav-footer">Edit numbers in <strong>My Profile</strong> and hit Recalculate.</div>
+</nav>
+
+<main class="main">
+
+<section class="screen active" id="screen-overview">
+  <div class="screen-header"><h2>Overview</h2><p>Your purchasing power at a glance</p></div>
+  <div class="mode-bar">
+    <button class="mode-btn active" id="mode-comfortable" onclick="setMode('comfortable')">&#128154; Comfortable (25%)</button>
+    <button class="mode-btn" id="mode-maximum" onclick="setMode('maximum')">&#128200; Maximum (35% cap)</button>
+  </div>
+  <div class="hero-card blue-grad">
+    <div class="label">Total Purchasing Power</div>
+    <div class="amount" id="ov_total">--</div>
+    <div class="sub" id="ov_total_sub">Loading...</div>
+    <div class="hero-meta">
+      <div class="hm"><div class="hm-label">Total monthly (all-in)</div><div class="hm-val" id="ov_monthly">--</div></div>
+      <div class="hm"><div class="hm-label">Debt ratio (EMI+insur)</div><div class="hm-val" id="ov_ratio">--</div></div>
+      <div class="hm"><div class="hm-label">Net for property (new)</div><div class="hm-val" id="ov_netprop">--</div></div>
+    </div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-pill blue"><div class="sp-label">Bank Loan</div><div class="sp-val" id="ov_loan">--</div><div class="sp-sub" id="ov_loan_sub">25 yrs</div></div>
+    <div class="stat-pill green"><div class="sp-label">PTZ (0%)</div><div class="sp-val" id="ov_ptz">--</div><div class="sp-sub">Zero interest</div></div>
+    <div class="stat-pill"><div class="sp-label">Apport</div><div class="sp-val" id="ov_apport">--</div><div class="sp-sub">Net of charges</div></div>
+  </div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-label" style="margin-bottom:2px">Monthly Cost Breakdown</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px" id="ov_mode_note">Comfortable target — edit in Mortgage tab</div>
+    <div class="row-item"><div><div class="ri-label">Bank EMI</div><div class="ri-sub">goes toward mortgage repayment</div></div><div class="ri-val blue" id="ov_emi">--</div></div>
+    <div class="row-item"><div><div class="ri-label">Mortgage insurance</div><div class="ri-sub">assurance emprunteur — counts in 35% DTI</div></div><div class="ri-val" id="ov_ins">--</div></div>
+    <div class="row-item"><div><div class="ri-label">Property charges</div><div class="ri-sub">charges copropriete — not in DTI</div></div><div class="ri-val" id="ov_chrg">--</div></div>
+    <div class="row-item"><div><div class="ri-label">Taxe fonciere</div><div class="ri-sub">monthly equivalent — not in DTI</div></div><div class="ri-val" id="ov_txmo">--</div></div>
+    <div class="row-item" style="padding:12px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total monthly housing cost</div></div><div class="ri-val" style="font-size:18px;font-weight:800;color:var(--blue)" id="ov_total_mo">--</div></div>
+  </div>
+  <div class="whatif-panel">
+    <div class="whatif-title">What-if scenarios &mdash; toggle to see impact</div>
+    <div class="whatif-row">
+      <div class="whatif-left"><div class="whatif-name">PTZ (zero-interest loan)</div><div class="whatif-impact" id="wif_ptz_impact">--</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="wif_ptz" checked onchange="calculate()"/><div class="toggle-track"></div></label>
+    </div>
+    <div class="whatif-row">
+      <div class="whatif-left"><div class="whatif-name">Apport from PEE + PERCO</div><div class="whatif-impact" id="wif_ap_impact">--</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="wif_ap" checked onchange="calculate()"/><div class="toggle-track"></div></label>
+    </div>
+    <div class="whatif-row">
+      <div class="whatif-left"><div class="whatif-name">Action Logement loan</div><div class="whatif-impact" id="wif_al_impact">--</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="wif_al" checked onchange="calculate()"/><div class="toggle-track"></div></label>
+    </div>
+  </div>
+  <div class="insight blue" id="ov_insight"><span class="icon">&#128161;</span><div id="ov_insight_text"><strong>Loading...</strong></div></div>
+  <div class="card">
+    <div class="card-label">Net Budget After Notary Fees</div>
+    <div class="row-item">
+      <div><div class="ri-label">New build <span class="badge green">Recommended</span></div><div class="ri-sub">Frais de notaire ~2.5%</div></div>
+      <div class="ri-val green" id="ov_net_new">--</div>
+    </div>
+    <div class="row-item">
+      <div><div class="ri-label">Old property</div><div class="ri-sub">Frais de notaire ~7.5%</div></div>
+      <div class="ri-val amber" id="ov_net_old">--</div>
+    </div>
+  </div>
+</section>
+
+<section class="screen" id="screen-profile">
+  <div class="screen-header"><h2>My Profile</h2><p>Edit your numbers &mdash; everything updates on Recalculate</p></div>
+  <div class="card">
+    <div class="form-section">
+      <div class="form-section-title">Income</div>
+      <div class="field-row">
+        <div class="field"><label>Gross Annual Salary <span class="hint">(salaire brut)</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="f_gross" value="75600" step="100"/></div></div>
+        <div class="field"><label>Net Monthly <span class="hint">(salaire net)</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="f_net" value="4500" step="50"/></div></div>
+      </div>
+      <div class="field"><label>Fiscal Reference Income 2024 <span class="hint">(for PTZ)</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="f_fiscal" value="66000" step="500"/></div></div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Savings &mdash; PEE &amp; PERCO</div>
+      <div class="field-row">
+        <div class="field"><label>PEE balance</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="f_pee" value="25000" step="500"/></div></div>
+        <div class="field"><label>PERCO balance</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="f_perco" value="17500" step="500"/></div></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Reserve for child</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="f_child" value="12500" step="500"/></div></div>
+        <div class="field"><label>Gains ratio <span class="hint">% that are investment gains</span></label><div class="input-wrap has-suffix"><input type="number" id="f_gains" value="20" min="0" max="100"/><span class="suffix">%</span></div></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Purchase Settings</div>
+      <div class="field-row">
+        <div class="field"><label>Target property price</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="f_price" value="300000" step="5000"/></div></div>
+        <div class="field"><label>Preferred loan term</label><select id="f_term"><option value="20">20 years</option><option value="25" selected>25 years</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>PTZ Zone</label><select id="f_zone"><option value="Abis">Zone A bis (Paris intra)</option><option value="A" selected>Zone A (inner suburbs)</option><option value="B1">Zone B1 (outer suburbs)</option><option value="B2">Zone B2</option></select></div>
+        <div class="field"><label>Household size</label><select id="f_household"><option value="1">1 person</option><option value="2" selected>2 persons</option><option value="3">3 persons</option><option value="4">4 persons</option><option value="5">5+ persons</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Property type</label><select id="f_type"><option value="new" selected>New build (VEFA)</option><option value="old">Old property (Ancien)</option></select></div>
+        <div class="field"><label>Action Logement eligible?</label><select id="f_al"><option value="yes" selected>Yes</option><option value="no">No / Unknown</option></select></div>
+      </div>
+      <div class="field"><label>Action Logement amount <span class="hint">up to 40k at ~1%</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="f_alamt" value="30000" step="1000" max="40000"/></div></div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Monthly Housing Costs</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">These are deducted from your total monthly budget to find how much is left for the bank EMI. Charges and taxe fonciere do NOT count toward the French 35% debt-ratio cap.</div>
+      <div class="field-row">
+        <div class="field"><label>Mortgage Insurance <span class="hint">(assurance emprunteur)</span></label><div class="input-wrap has-suffix"><span class="prefix">&#8364;</span><input type="number" id="f_insurance" value="80" step="5" oninput="calculate()"/><span class="suffix">/mo</span></div></div>
+        <div class="field"><label>Property Charges <span class="hint">(charges copropriete)</span></label><div class="input-wrap has-suffix"><span class="prefix">&#8364;</span><input type="number" id="f_charges" value="150" step="10" oninput="calculate()"/><span class="suffix">/mo</span></div></div>
+      </div>
+      <div class="field"><label>Taxe Fonciere <span class="hint">(annual — exempt 2 yrs for new builds)</span></label><div class="input-wrap has-suffix"><span class="prefix">&#8364;</span><input type="number" id="f_taxe" value="1200" step="100" oninput="calculate()"/><span class="suffix">/yr</span></div></div>
+    </div>
+    <button class="calc-btn" onclick="calculate()">Recalculate &#8594;</button>
+  </div>
+</section>
+
+<section class="screen" id="screen-mortgage">
+  <div class="screen-header"><h2>Mortgage Capacity</h2><p>France's 35% debt cap (taux d'endettement) applied to your income</p></div>
+  <div class="grid-2" style="margin-bottom:14px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-label">Max EMI Allowed (35% cap minus insurance)</div>
+      <div class="card-value blue" id="mg_max">--</div>
+      <div class="card-sub">Regulatory ceiling</div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-label">Total Monthly Housing Budget (all-in)</div>
+      <div class="input-wrap" style="margin-top:6px"><span class="prefix" style="font-size:18px;font-weight:800">&#8364;</span><input type="number" id="mg_custom_target" value="1450" step="25" oninput="calculate()" style="font-size:22px;font-weight:800;color:var(--green);padding-left:27px"/></div>
+      <div class="card-sub" style="margin-top:6px" id="mg_target_pct">= 25% of gross monthly</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">EMI = total minus insurance, charges &amp; taxe</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-label" style="margin-bottom:12px">Scenarios at Your Target (25 years)</div>
+    <div id="mg_scenarios25"></div>
+  </div>
+  <div class="card">
+    <div class="card-label" style="margin-bottom:12px">By Loan Term at Market Rate</div>
+    <div id="mg_terms"></div>
+  </div>
+  <div class="card">
+    <div class="card-label" style="margin-bottom:10px">Affordability Check</div>
+    <div id="mg_afford"></div>
+  </div>
+  <div class="card">
+    <div class="card-label" style="margin-bottom:10px">Payment Breakdown — How your budget is split</div>
+    <div id="mg_pmt_breakdown"></div>
+  </div>
+</section>
+
+<section class="screen" id="screen-subsidies">
+  <div class="screen-header"><h2>PTZ &amp; Subsidised Loans</h2><p>Zero- and low-interest government support</p></div>
+  <div class="grid-2" style="margin-bottom:14px">
+    <div class="card" style="margin-bottom:0"><div class="card-label">Your PTZ Amount</div><div class="card-value green" id="sub_ptz_amt">--</div><div class="card-sub" id="sub_ptz_sub">at 0% interest</div></div>
+    <div class="card" style="margin-bottom:0"><div class="card-label">Interest Saved vs Market</div><div class="card-value green" id="sub_ptz_save">--</div><div class="card-sub" id="sub_ptz_save_sub">over 25 years</div></div>
+  </div>
+  <div class="insight" id="sub_elig_banner"><span class="icon">&#9989;</span><div id="sub_elig_text"><strong>Loading...</strong></div></div>
+  <div class="card">
+    <div class="card-label" style="margin-bottom:10px">Income Tranches &mdash; Zone <span id="sub_zone_lbl">A</span></div>
+    <div class="tranche-grid" id="sub_tranches"></div>
+    <div id="sub_ptz_detail"></div>
+  </div>
+  <div class="card">
+    <div class="card-label" style="margin-bottom:14px">PTZ Zones Explained</div>
+    <div class="zone-diagram">
+      <div class="zone-ring zone-r4"><div class="zone-tag" style="bottom:8px;color:#92400E">Zone B2 &mdash; smaller towns</div></div>
+      <div class="zone-ring zone-r3"><div class="zone-tag" style="bottom:8px;color:#1D4ED8">Zone B1 &mdash; outer suburbs &amp; large cities</div></div>
+      <div class="zone-ring zone-r2"><div class="zone-tag" style="top:6px;color:#1D4ED8">Zone A &mdash; Ile-de-France</div></div>
+      <div class="zone-ring zone-r1"><div class="zone-center-label">A bis<br/>Paris</div></div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">Key communes &amp; their zones</div>
+      <div class="commune-list" id="commune_list"></div>
+    </div>
+    <div class="insight blue" style="margin-bottom:0"><span class="icon">&#8505;&#65039;</span><div>Zone affects your <strong>income ceiling</strong> and <strong>PTZ quota</strong> (% of project financed at 0%). Since April 2025, ALL zones are eligible for new builds until Dec 31, 2027.</div></div>
+  </div>
+  <div class="card">
+    <div class="card-label" style="margin-bottom:10px">Action Logement</div>
+    <div id="sub_al_detail"></div>
+  </div>
+</section>
+
+<section class="screen" id="screen-budget">
+  <div class="screen-header"><h2>Budget Plan</h2><p>Where every euro comes from</p></div>
+  <div class="hero-card green-grad">
+    <div class="label">Total Purchasing Power</div>
+    <div class="amount" id="bg_total">--</div>
+    <div class="sub" id="bg_total_sub">before notary fees</div>
+  </div>
+  <div class="card">
+    <div class="card-label" style="margin-bottom:6px">Breakdown</div>
+    <div class="budget-bar" id="bg_bar"><div class="seg" style="background:#2563EB"></div><div class="seg" style="background:#059669"></div><div class="seg" style="background:#D97706"></div><div class="seg" style="background:#7C3AED"></div></div>
+    <div class="bar-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#2563EB"></div>Bank loan</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>PTZ (0%)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#D97706"></div>Action Logement</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7C3AED"></div>Apport</div>
+    </div>
+    <div id="bg_breakdown"></div>
+  </div>
+  <div class="card"><div class="card-label" style="margin-bottom:10px">Apport (PEE + PERCO)</div><div id="bg_savings"></div></div>
+  <div class="card"><div class="card-label" style="margin-bottom:10px">Net Property Budget After Fees</div><div id="bg_after_fees"></div></div>
+</section>
+
+<section class="screen" id="screen-compare">
+  <div class="screen-header"><h2>New vs Old</h2><p>Financial impact for your exact budget</p></div>
+  <div class="verdict-card" id="cmp_verdict" style="background:linear-gradient(135deg,#064E3B,#059669)">
+    <div class="vc-label">Our Verdict</div>
+    <div class="vc-title">New Build (VEFA) is the stronger choice</div>
+    <div class="vc-body" id="cmp_verdict_body">Loading...</div>
+  </div>
+  <div class="compare-wrap">
+    <div class="cmp new"><div class="cmp-head">&#127959;&#65039; New Build (VEFA)</div><div class="cmp-body" id="cmp_new"></div></div>
+    <div class="cmp old"><div class="cmp-head">&#127960;&#65039; Old Property</div><div class="cmp-body" id="cmp_old"></div></div>
+  </div>
+  <div class="card"><div class="card-label" style="margin-bottom:10px">Scorecard</div><div id="cmp_score"></div></div>
+</section>
+
+<section class="screen" id="screen-process">
+  <div class="screen-header"><h2>Purchase Process</h2><p>Step-by-step from pre-approval to keys</p></div>
+  <div class="proc-toggle">
+    <button class="active" onclick="showProc('vefa',this)">&#127959;&#65039; New Build (VEFA)</button>
+    <button onclick="showProc('ancien',this)">&#127960;&#65039; Old Property (Ancien)</button>
+  </div>
+  <div id="proc-vefa"><div id="steps_vefa"></div></div>
+  <div id="proc-ancien" style="display:none"><div id="steps_ancien"></div></div>
+</section>
+
+<section class="screen" id="screen-glossary">
+  <div class="screen-header"><h2>Glossary</h2><p>Every French term explained</p></div>
+  <div class="gloss-search"><span class="gs-icon">&#128269;</span><input type="text" id="gloss_search" placeholder="Search terms..." oninput="filterGloss(this.value)"/></div>
+  <div class="card"><div id="gloss_list"></div></div>
+</section>
+
+<section class="screen" id="screen-chat">
+  <div class="screen-header"><h2>Ask a Question</h2><p>Get answers about French property buying based on your profile</p></div>
+  <div class="chat-wrap">
+    <div class="chat-header">
+      <div style="font-size:13px;color:var(--muted)">Smart FAQ &middot; answers use your profile data</div>
+      <div class="chat-limit-badge">&#128172; <span class="ql-num" id="q_remaining">20</span> questions today</div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Quick questions:</div>
+    <div class="chat-suggestions">
+      <div class="chat-chip" onclick="ask('How much PTZ can we get?')">How much PTZ?</div>
+      <div class="chat-chip" onclick="ask('What are frais de notaire?')">Frais de notaire?</div>
+      <div class="chat-chip" onclick="ask('How long does VEFA take?')">VEFA duration?</div>
+      <div class="chat-chip" onclick="ask('When do we unlock PEE PERCO?')">Unlock PEE/PERCO?</div>
+      <div class="chat-chip" onclick="ask('Can foreigners buy in France?')">Expats buying?</div>
+      <div class="chat-chip" onclick="ask('What is taux d endettement?')">Taux d'endettement?</div>
+      <div class="chat-chip" onclick="ask('What is a courtier?')">What is a courtier?</div>
+      <div class="chat-chip" onclick="ask('What are all the costs when buying?')">All costs?</div>
+    </div>
+    <div class="chat-messages" id="chat_messages"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chat_input" placeholder="Type your question..." onkeydown="if(event.key==='Enter')sendChat()"/>
+      <button class="chat-send" onclick="sendChat()">&#10148;</button>
+    </div>
+    <div class="chat-disclaimer">Answers based on French property rules as of 2026 and your profile. For legal/financial decisions, consult a notaire or courtier.</div>
+  </div>
+</section>
+
+</main>
+<script>
+var scenarioMode='comfortable';
+var PTZ_DB={
+  Abis:{ceil:{1:37000,2:73500,3:88000,4:102500,5:117000},maxOp:{1:200000,2:250000,3:300000,4:350000,5:400000},t:[{q:.5,max:36000},{q:.4,max:52500},{q:.4,max:73500},{q:.2,max:110000}]},
+  A:{ceil:{1:37000,2:73500,3:88000,4:102500,5:117000},maxOp:{1:180000,2:225000,3:270000,4:315000,5:360000},t:[{q:.5,max:36000},{q:.4,max:52500},{q:.4,max:73500},{q:.2,max:110000}]},
+  B1:{ceil:{1:30000,2:60000,3:72000,4:84000,5:96000},maxOp:{1:150000,2:195000,3:234000,4:273000,5:312000},t:[{q:.5,max:30000},{q:.4,max:42500},{q:.4,max:60000},{q:.2,max:88000}]},
+  B2:{ceil:{1:27000,2:54000,3:64800,4:75600,5:86400},maxOp:{1:110000,2:150000,3:180000,4:210000,5:240000},t:[{q:.2,max:27000},{q:.2,max:40000},{q:.2,max:54000},{q:.2,max:80000}]}
+};
+var AVG={15:.032,20:.0337,25:.0348};
+var COMMUNES=[
+  {name:'Le Plessis-Robinson',dept:'92',zone:'Abis',note:'Safest commune in France'},
+  {name:'Boulogne-Billancourt',dept:'92',zone:'Abis',note:'Premium inner suburb'},
+  {name:'Montrouge',dept:'92',zone:'Abis',note:'Close to Paris, Line 4'},
+  {name:'Vincennes',dept:'94',zone:'Abis',note:'Near Bois de Vincennes'},
+  {name:'Noisy-le-Grand',dept:'93',zone:'A',note:'LIEP international school nearby'},
+  {name:'Massy',dept:'91',zone:'A',note:'TGV hub, GPE Line 18'},
+  {name:'Palaiseau',dept:'91',zone:'A',note:'Near Paris-Saclay, GPE Line 18'},
+  {name:'Gif-sur-Yvette',dept:'91',zone:'B1',note:'Saclay plateau, quieter'},
+  {name:'Evry-Courcouronnes',dept:'91',zone:'B1',note:'Outer suburb, more affordable'},
+  {name:'Saint-Denis',dept:'93',zone:'Abis',note:'GPE Line 15, regenerating area'}
+];
+var ZCOLORS={Abis:'background:#1E40AF;color:white',A:'background:#BFDBFE;color:#1D4ED8',B1:'background:#DBEAFE;color:#1D4ED8',B2:'background:#FEF9C3;color:#92400E'};
+var DAILY_LIMIT=20;
+function getQL(){var d=new Date().toDateString(),s=JSON.parse(localStorage.getItem('parisFAQ')||'{}');return s.date!==d?DAILY_LIMIT:Math.max(0,DAILY_LIMIT-(s.used||0));}
+function useQ(){var d=new Date().toDateString(),s=JSON.parse(localStorage.getItem('parisFAQ')||'{}'),u=s.date===d?(s.used||0)+1:1;localStorage.setItem('parisFAQ',JSON.stringify({date:d,used:u}));document.getElementById('q_remaining').textContent=Math.max(0,DAILY_LIMIT-u);}
+function updateQC(){document.getElementById('q_remaining').textContent=getQL();}
+function loanCap(m,r,y){var rm=r/12,n=y*12;return rm===0?m*n:m*((Math.pow(1+rm,n)-1)/(rm*Math.pow(1+rm,n)));}
+function monthly(P,r,y){var rm=r/12,n=y*12;return rm===0?P/n:P*rm*Math.pow(1+rm,n)/(Math.pow(1+rm,n)-1);}
+function fmt(n){return n===0?'--':'\u20AC'+Math.round(n).toLocaleString('fr-FR');}
+function fmtK(n){return n===0?'--':'\u20AC'+Math.round(n/1000)+'k';}
+function pct(r){return (r*100).toFixed(2)+'%';}
+function go(id,btn,fromMob){
+  // hide more sheet if open
+  closeMobMore();
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(b){b.classList.remove('active');});
+  // mobile nav sync
+  document.querySelectorAll('.mob-nav-item').forEach(function(b){b.classList.remove('active');});
+  var screenEl=document.getElementById('screen-'+id);
+  if(screenEl){screenEl.classList.add('active');}
+  if(btn)btn.classList.add('active');
+  updateQC();
+  window.scrollTo(0,0);
+}
+function closeMobMore(){
+  document.getElementById('mob_more_sheet').style.display='none';
+  document.getElementById('mob_more_backdrop').style.display='none';
+}
+function mobMore(btn){
+  var sheet=document.getElementById('mob_more_sheet');
+  var bd=document.getElementById('mob_more_backdrop');
+  if(sheet.style.display==='none'){sheet.style.display='block';bd.style.display='block';}
+  else{closeMobMore();}
+}
+function setMode(m){
+  scenarioMode=m;
+  document.getElementById('mode-comfortable').classList.toggle('active',m==='comfortable');
+  document.getElementById('mode-maximum').classList.toggle('active',m==='maximum');
+  calculate();
+}
+function showProc(type,btn){
+  document.querySelectorAll('.proc-toggle button').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('proc-vefa').style.display=type==='vefa'?'block':'none';
+  document.getElementById('proc-ancien').style.display=type==='ancien'?'block':'none';
+}
+function calculate(){
+  var G=+document.getElementById('f_gross').value||0;
+  var FIS=+document.getElementById('f_fiscal').value||0;
+  var PEE=+document.getElementById('f_pee').value||0;
+  var PERC=+document.getElementById('f_perco').value||0;
+  var CHLD=+document.getElementById('f_child').value||0;
+  var GR=(+document.getElementById('f_gains').value||0)/100;
+  var PRICE=+document.getElementById('f_price').value||0;
+  var TERM=+document.getElementById('f_term').value||25;
+  var ZONE=document.getElementById('f_zone').value;
+  var HH=Math.min(5,Math.max(1,+document.getElementById('f_household').value||2));
+  var TYPE=document.getElementById('f_type').value;
+  var AL_Y=document.getElementById('f_al').value==='yes';
+  var AL_A=+document.getElementById('f_alamt').value||0;
+  var useWifPTZ=document.getElementById('wif_ptz').checked;
+  var useWifAp=document.getElementById('wif_ap').checked;
+  var useWifAL=document.getElementById('wif_al').checked;
+  var customTarget=+document.getElementById('mg_custom_target').value||0;
+  var insurance=+document.getElementById('f_insurance').value||80;
+  var charges=+document.getElementById('f_charges').value||150;
+  var taxeAnnual=+document.getElementById('f_taxe').value||1200;
+  var taxeMonthly=taxeAnnual/12;
+  var gMonth=G/12;
+  var maxPmt=gMonth*0.35;
+  // comfTotal = total monthly housing budget (all-in: EMI + insurance + charges + taxe)
+  var comfTotal=customTarget>0?customTarget:Math.round(gMonth*0.25);
+  // EMI available after deducting non-mortgage costs
+  var emiComf=Math.max(50,comfTotal-insurance-charges-taxeMonthly);
+  // Max scenario: 35% DTI covers EMI + insurance only (charges/taxe not in French DTI)
+  var maxEmi=Math.max(0,maxPmt-insurance);
+  var maxTotal=maxEmi+insurance+charges+taxeMonthly;
+  // Active values depend on scenario
+  var activeEmi=scenarioMode==='maximum'?maxEmi:emiComf;
+  var activeTotal=scenarioMode==='maximum'?maxTotal:comfTotal;
+  var comfPmt=comfTotal; // for % display
+  var totalSav=PEE+PERC;
+  var gains=totalSav*GR;
+  var social=gains*0.172;
+  var apportFull=Math.max(0,totalSav-social-CHLD);
+  var apport=useWifAp?apportFull:0;
+  var alLoan=(AL_Y&&useWifAL)?AL_A:0;
+  var pd=PTZ_DB[ZONE]||PTZ_DB.A;
+  var maxOp=pd.maxOp[HH]||pd.maxOp[5];
+  var incRef=Math.max(FIS,PRICE/9);
+  var tranche=-1;
+  for(var i=0;i<pd.t.length;i++){if(incRef<=pd.t[i].max){tranche=i;break;}}
+  var quotite=tranche>=0?pd.t[tranche].q:0;
+  var ptzBase=Math.min(PRICE,maxOp);
+  var ptzFull=(TYPE==='new'&&tranche>=0)?ptzBase*quotite:0;
+  var ptzAmt=useWifPTZ?ptzFull:0;
+  var ptzSave=ptzFull*AVG[TERM]*TERM*0.5;
+  var capActive=loanCap(activeEmi,AVG[TERM],TERM);
+  var activeMo=monthly(capActive,AVG[TERM],TERM);
+  var ratioUsed=(activeMo+insurance)/gMonth; // DTI = EMI + insurance
+  var totalBudget=apport+capActive+ptzAmt+alLoan;
+  var notaryNew=PRICE*0.025;
+  var notaryOld=PRICE*0.075;
+  var netNew=totalBudget-notaryNew;
+  var netOld=totalBudget-notaryOld;
+  var bankNeeded=Math.max(0,PRICE-apport-ptzAmt-alLoan);
+  var isAffordable=bankNeeded<=capActive;
+
+  document.getElementById('mode-comfortable').textContent='Comfortable - '+fmt(comfTotal)+'/mo total';
+  document.getElementById('ov_total').textContent=fmt(totalBudget);
+  document.getElementById('ov_total_sub').textContent='Bank loan'+(ptzAmt>0?' + PTZ':'')+' + Apport'+(alLoan>0?' + AL':'');
+  document.getElementById('ov_monthly').textContent=fmt(activeTotal)+'/mo';
+  document.getElementById('ov_ratio').textContent=(ratioUsed*100).toFixed(1)+'%';
+  // Overview breakdown
+  document.getElementById('ov_emi').textContent=fmt(activeMo)+'/mo';
+  document.getElementById('ov_ins').textContent=fmt(insurance)+'/mo';
+  document.getElementById('ov_chrg').textContent=fmt(charges)+'/mo';
+  document.getElementById('ov_txmo').textContent=fmt(taxeMonthly)+'/mo';
+  document.getElementById('ov_total_mo').textContent=fmt(activeTotal)+'/mo';
+  document.getElementById('ov_mode_note').textContent=scenarioMode==='maximum'?'Maximum (35% DTI cap) — bank EMI '+fmt(activeMo)+' + insurance '+fmt(insurance):'Comfortable target — edit in Mortgage tab';
+  document.getElementById('ov_netprop').textContent=fmtK(netNew);
+  document.getElementById('ov_loan').textContent=fmtK(capActive);
+  document.getElementById('ov_loan_sub').textContent=TERM+' yrs - '+pct(AVG[TERM]);
+  document.getElementById('ov_ptz').textContent=fmtK(ptzAmt);
+  document.getElementById('ov_apport').textContent=fmtK(apport);
+  document.getElementById('ov_net_new').textContent=fmt(netNew);
+  document.getElementById('ov_net_old').textContent=fmt(netOld);
+
+  function setImpact(id,val,on){
+    var el=document.getElementById(id);
+    if(val===0){el.textContent='Not applicable';el.className='whatif-impact';return;}
+    el.textContent=on?'Adds '+fmt(val)+' to your budget':'Without this: budget reduces by '+fmt(val);
+    el.className='whatif-impact '+(on?'pos':'neg');
+  }
+  setImpact('wif_ptz_impact',ptzFull,useWifPTZ);
+  setImpact('wif_ap_impact',apportFull,useWifAp);
+  setImpact('wif_al_impact',AL_Y?AL_A:0,useWifAL);
+
+  var ins=document.getElementById('ov_insight_text');
+  if(!useWifPTZ&&!useWifAp&&!useWifAL)
+    ins.innerHTML='<strong>No subsidies / apport</strong> Bare bank loan only.';
+  else if(ptzAmt>0)
+    ins.innerHTML='<strong>PTZ is your biggest advantage</strong> Saves ~'+fmt(ptzSave)+' in interest over '+TERM+' years.';
+  else
+    ins.innerHTML='<strong>Switch to New Build to unlock PTZ</strong> Old property not eligible. New build adds ~'+fmt(ptzFull)+' at 0%.';
+  document.getElementById('ov_insight').className='insight '+(ptzAmt>0?'green':'amber');
+
+  document.getElementById('mg_max').textContent=fmt(maxEmi)+'/mo';
+  document.getElementById('mg_target_pct').textContent='= '+(comfTotal/gMonth*100).toFixed(1)+'% of gross monthly total - EMI portion: '+fmt(emiComf)+'/mo';
+
+  var rates25=[{r:.0325,l:'Best rate'},{r:.0348,l:'Market avg'},{r:.039,l:'Conservative'}];
+  document.getElementById('mg_scenarios25').innerHTML=rates25.map(function(ro,i){
+    var cap=loanCap(activeEmi,ro.r,25),mp=monthly(cap,ro.r,25);
+    return '<div class="scenario'+(i===0?' best':'')+'"><div class="sc-rate"><div class="r">'+pct(ro.r)+'</div><div class="rl">'+ro.l+'</div></div><div class="sc-divider"></div><div class="sc-amount"><div class="a">'+fmt(cap)+'</div><div class="al">borrowing capacity</div></div><div class="sc-monthly"><div class="m">'+fmt(mp)+'/mo</div><div class="ml">monthly</div></div></div>';
+  }).join('');
+
+  document.getElementById('mg_terms').innerHTML=[15,20,25].map(function(t){
+    var cap=loanCap(activeEmi,AVG[t],t),mp=monthly(cap,AVG[t],t),sel=t===TERM;
+    return '<div class="scenario'+(sel?' best':'')+'"><div class="sc-rate"><div class="r">'+t+'y</div><div class="rl">'+pct(AVG[t])+(sel?' chosen':'')+'</div></div><div class="sc-divider"></div><div class="sc-amount"><div class="a">'+fmt(cap)+'</div><div class="al">capacity</div></div><div class="sc-monthly"><div class="m">'+fmt(mp)+'/mo</div><div class="ml">monthly</div></div></div>';
+  }).join('');
+
+  var dpct=Math.min(100,capActive>0?(bankNeeded/capActive*100):100).toFixed(0);
+  document.getElementById('mg_afford').innerHTML=
+    '<div class="row-item"><div><div class="ri-label">Target price</div></div><div class="ri-val">'+fmt(PRICE)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Bank loan needed</div><div class="ri-sub">after apport, PTZ and AL</div></div><div class="ri-val blue">'+fmt(bankNeeded)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Your loan capacity ('+TERM+' yr)</div></div><div class="ri-val">'+fmt(capActive)+'</div></div>'+
+    '<div class="meter-wrap"><div class="meter-bg"><div class="meter-fill '+(isAffordable?'green':'red')+'" style="width:'+dpct+'%"></div></div><div class="meter-labels"><span>0</span><span>'+fmtK(capActive)+' capacity</span></div></div>'+
+    '<div class="insight '+(isAffordable?'green':'red')+'" style="margin:10px 0 0"><span class="icon">'+(isAffordable?'OK':'!')+'</span><div>'+(isAffordable?'<strong>Within reach</strong> Bank loan needed ('+fmt(bankNeeded)+') is within your capacity.':'<strong>Gap of '+fmt(bankNeeded-capActive)+'</strong> Lower the price, extend the term, or increase apport.')+'</div></div>';
+
+  document.getElementById('sub_ptz_amt').textContent=fmt(ptzFull);
+  document.getElementById('sub_ptz_sub').textContent=ptzFull>0?'at 0% - quotite '+(quotite*100).toFixed(0)+'%':'Not applicable';
+  document.getElementById('sub_ptz_save').textContent='~'+fmt(ptzSave);
+  document.getElementById('sub_ptz_save_sub').textContent='saved over '+TERM+' years vs market rate';
+  document.getElementById('sub_zone_lbl').textContent=ZONE;
+
+  var elig=TYPE==='new'&&tranche>=0;
+  document.getElementById('sub_elig_banner').className='insight '+(elig?'green':'amber');
+  document.getElementById('sub_elig_text').innerHTML=elig
+    ?'<strong>PTZ eligible</strong> You qualify as primo-accedants buying new in Zone '+ZONE+'. Income reference: '+fmt(incRef)+'.'
+    :TYPE!=='new'
+      ?'<strong>Switch to New Build</strong> PTZ requires VEFA. Old property is not eligible.'
+      :'<strong>Income above ceiling</strong> Income reference '+fmt(incRef)+' exceeds Zone '+ZONE+' ceiling.';
+
+  document.getElementById('sub_tranches').innerHTML=pd.t.map(function(t,i){
+    var me=i===tranche&&TYPE==='new';
+    return '<div class="tranche-item'+(me?' active':'')+'"><div class="ti-label">Tranche '+(i+1)+(me?' - you':'')+'</div><div class="ti-amount">'+fmt(ptzBase*t.q)+'</div><div class="ti-sub">Income up to '+fmt(t.max)+' - '+(t.q*100).toFixed(0)+'% quotite</div></div>';
+  }).join('');
+
+  document.getElementById('sub_ptz_detail').innerHTML=
+    '<div class="row-item"><div><div class="ri-label">Income reference</div><div class="ri-sub">max(fiscal, price/9)</div></div><div class="ri-val">'+fmt(incRef)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">PTZ base</div><div class="ri-sub">min(price, zone max)</div></div><div class="ri-val">'+fmt(ptzBase)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Quotite applied</div></div><div class="ri-val blue">'+(quotite*100).toFixed(0)+'%</div></div>'+
+    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-size:15px;font-weight:700">Your PTZ Amount</div></div><div class="ri-val green" style="font-size:20px">'+fmt(ptzFull)+'</div></div>';
+
+  document.getElementById('commune_list').innerHTML=COMMUNES.map(function(c){
+    return '<div class="commune-row"><div class="cn">'+c.name+' <span style="color:var(--muted);font-size:12px">dept '+c.dept+'</span></div><div class="cz" style="'+ZCOLORS[c.zone]+'">Zone '+c.zone+'</div><div style="font-size:12px;color:var(--muted);margin-left:8px">'+c.note+'</div></div>';
+  }).join('');
+
+  document.getElementById('sub_al_detail').innerHTML=
+    '<div class="row-item"><div class="ri-label">Employer participates?</div><div class="ri-val '+(AL_Y?'green':'amber')+'">'+(AL_Y?'Yes':'Ask HR')+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Loan amount (up to 40,000)</div></div><div class="ri-val">'+fmt(AL_Y?AL_A:0)+'</div></div>'+
+    '<div class="row-item"><div class="ri-label">Interest rate</div><div class="ri-val green">~1%</div></div>'+
+    '<div class="row-item"><div class="ri-label">Duration</div><div class="ri-val">Up to 25 years</div></div>'+
+    '<div class="insight '+(AL_Y?'blue':'amber')+'" style="margin:12px 0 0"><span class="icon">i</span><div>'+(AL_Y?'Apply within 6 months of signing your reservation or compromis. Contact actionlogement.fr or your HR.':'Ask your HR if your company participates. Companies with 50+ employees typically do.')+'</div></div>';
+
+  document.getElementById('bg_total').textContent=fmt(totalBudget);
+  document.getElementById('bg_total_sub').textContent='before notary fees - '+TERM+'-year loan at '+pct(AVG[TERM]);
+  var segs=document.querySelectorAll('#bg_bar .seg');
+  function barPct(x){return totalBudget>0?(x/totalBudget*100).toFixed(1)+'%':'0%';}
+  segs[0].style.width=barPct(capActive);segs[1].style.width=barPct(ptzAmt);segs[2].style.width=barPct(alLoan);segs[3].style.width=barPct(apport);
+  document.getElementById('bg_breakdown').innerHTML=
+    '<div class="row-item"><div><div class="ri-label">Bank mortgage</div><div class="ri-sub">'+TERM+' yrs at '+pct(AVG[TERM])+'</div></div><div class="ri-val blue">'+fmt(capActive)+'</div></div>'+
+    (ptzAmt>0?'<div class="row-item"><div><div class="ri-label">PTZ (0%)</div><div class="ri-sub">zero-interest portion</div></div><div class="ri-val green">'+fmt(ptzAmt)+'</div></div>':'')+
+    (alLoan>0?'<div class="row-item"><div><div class="ri-label">Action Logement (~1%)</div></div><div class="ri-val blue">'+fmt(alLoan)+'</div></div>':'')+
+    '<div class="row-item"><div><div class="ri-label">Apport</div><div class="ri-sub">net of social charges</div></div><div class="ri-val blue">'+fmt(apport)+'</div></div>'+
+    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-size:15px;font-weight:700">Total</div></div><div class="ri-val blue" style="font-size:20px">'+fmt(totalBudget)+'</div></div>';
+  document.getElementById('bg_savings').innerHTML=
+    '<div class="row-item"><div class="ri-label">PEE + PERCO balance</div><div class="ri-val">'+fmt(totalSav)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Social charges on gains (17.2%)</div><div class="ri-sub">gains are income-tax-exempt</div></div><div class="ri-val red">-'+fmt(social)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Child reserve</div></div><div class="ri-val amber">-'+fmt(CHLD)+'</div></div>'+
+    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-size:15px;font-weight:700">Available apport</div></div><div class="ri-val green" style="font-size:20px">'+fmt(apportFull)+'</div></div>';
+  document.getElementById('bg_after_fees').innerHTML=
+    '<div class="row-item"><div><div class="ri-label">New build (2.5% fees)</div></div><div class="ri-val green">'+fmt(netNew)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Old property (7.5% fees)</div></div><div class="ri-val amber">'+fmt(netOld)+'</div></div>'+
+    '<div class="row-item"><div class="ri-label">Fee saving (new vs old)</div><div class="ri-val green">'+fmt(notaryOld-notaryNew)+'</div></div>';
+
+  function cmpR(k,v){return '<div class="cmp-row"><span class="cmp-key">'+k+'</span><span class="cmp-val">'+v+'</span></div>';}
+  document.getElementById('cmp_new').innerHTML=[
+    ['Notary fees','~2.5% ('+fmt(notaryNew)+')'],['Net budget',fmt(netNew)],
+    ['PTZ','Yes - '+fmt(ptzFull)+' at 0%'],['Taxe fonciere','Exempt 2 years'],
+    ['Warranty','10-yr decennale'],['Energy (DPE)','A/B (RE2020)'],['Keys','18-30 months'],
+  ].map(function(x){return cmpR(x[0],x[1]);}).join('');
+  document.getElementById('cmp_old').innerHTML=[
+    ['Notary fees','~7.5% ('+fmt(notaryOld)+')'],['Net budget',fmt(netOld)],
+    ['PTZ','Not eligible'],['Taxe fonciere','From year 1'],
+    ['Warranty','None after sale'],['Energy (DPE)','Variable'],['Keys','2-3 months'],
+  ].map(function(x){return cmpR(x[0],x[1]);}).join('');
+  document.getElementById('cmp_verdict_body').textContent='Notary fee saving: '+fmt(notaryOld-notaryNew)+'. PTZ adds '+fmt(ptzFull)+' at 0%. Together: ~'+fmt(notaryOld-notaryNew+ptzSave)+' more value over '+TERM+' years.';
+  document.getElementById('cmp_score').innerHTML=[
+    ['Frais de notaire','New build wins','Saves '+fmt(notaryOld-notaryNew)],
+    ['PTZ eligibility','New build wins','Old property not eligible'],
+    ['Taxe fonciere','New build wins','2-year exemption'],
+    ['Price per sqm','Old property','10-20% lower/sqm'],
+    ['Time to keys','Old property','Ready in 2-3 months'],
+    ['Energy (DPE)','New build','A/B guaranteed (RE2020)'],
+    ['Warranties','New build','10-yr decennale + GFA'],
+    ['Price negotiation','Old property','3-10% off possible'],
+  ].map(function(x){return '<div class="row-item"><div><div class="ri-label">'+x[0]+'</div><div class="ri-sub">'+x[2]+'</div></div><div class="ri-val">'+x[1]+'</div></div>';}).join('');
+
+  buildSteps([
+    {title:'Get Attestation de Financement',dur:'1-2 weeks',note:"Consult 2-3 courtiers (free) — pretto.fr, cafpi.fr, meilleurtaux.com. Gather: 3 payslips, 3 bank statements, 2 avis d'imposition, ID. Certificate required before any reservation.",pills:['pretto.fr','cafpi.fr','3 payslips',"2 avis d'imposition"]},
+    {title:'Find Programme & Visit Bureau de Vente',dur:'2-8 weeks',note:"Search nexity.fr, bouygues-immobilier.com, neuf.fr. Visit the sales office. Review floor plan and spec sheet (notice descriptive). Verify the GFA exists.",pills:['nexity.fr','neuf.fr','Verify GFA','Check GPE stations']},
+    {title:'Sign Contrat de Reservation',dur:'1 day + 10-day cooling-off',note:"Pay 2-5% depot de garantie. 10-day retractation window. IMMEDIATELY start PEE/PERCO unlock and Action Logement application — the 6-month window starts today.",pills:['Pay 2-5% deposit','10-day right to cancel','Unlock PEE+PERCO NOW','Apply Action Logement NOW']},
+    {title:'Obtain Offre de Pret',dur:'3-6 weeks',note:"Bank reviews your dossier. PTZ included in same application. Mandatory 10-day delai de reflexion — you cannot sign before day 11. Shop assurance emprunteur separately to save 5k-15k.",pills:['10-day reflection','Cannot sign before day 11','PTZ in same dossier','Shop insurance separately']},
+    {title:'Sign Acte Authentique at Notaire',dur:'1 day',note:"Pay frais de notaire (~2-3% of price). Pay 35% first instalment (foundations). You can bring your own notaire — fees are split, not doubled.",pills:['Pay ~2-3% notary fees','35% first instalment','Can add your own notaire']},
+    {title:'Construction — Staged Payments',dur:'18-30 months',note:"35% = foundations, 70% = roof on, 95% = complete, 100% = keys. Budget interets intercalaires (~200-600/month) on top of rent during this phase.",pills:['35% foundations','70% roof on','95% complete','Budget intercalaires + rent']},
+    {title:'Livraison — Key Handover',dur:'1 day + follow-up',note:"Inspect EVERY room. Document ALL defects (reserves) in writing on the PV de livraison. Photograph everything. Can retain 5% if major defects. File taxe fonciere exemption (form 6650-H) within 90 days.",pills:['Inspect everything','Note reserves in writing','Photos of all defects','File 6650-H within 90 days']},
+  ],'steps_vefa');
+  buildSteps([
+    {title:'Get Pre-Approval — Budget 7-8% Extra for Notary Fees',dur:'1-2 weeks',note:"Same documents as VEFA. Critical: notary fees (7-8%) come from your budget first. On 300k: 21-24k in fees. Your apport is largely consumed by fees.",pills:['Same documents as VEFA','7-8% notary fees upfront','seloger.com, pap.fr']},
+    {title:'Search & Visit Properties',dur:'4-16 weeks',note:"Check DPE carefully — avoid F/G (rental ban since 2025). Request full DDT file and last 3 co-ownership meeting minutes. Check for upcoming major works.",pills:['Check DPE','Request DDT file','3 co-ownership minutes','Check major works']},
+    {title:"Make Written Offer (Offre d'Achat)",dur:'1-2 weeks',note:"Always include condition suspensive d'obtention du pret — protects your deposit if bank refuses. Negotiate 3-10% off asking price.",pills:['Written offer','Mortgage condition suspensive','Negotiate 3-10% off']},
+    {title:'Sign Compromis de Vente',dur:'1 day + 3 months to final',note:"10-day cooling-off for buyer. Pay 5-10% depot. IMMEDIATELY unlock PEE/PERCO and apply for Action Logement — 6-month window starts now.",pills:['10-day cooling-off','5-10% deposit to notaire','Unlock PEE+PERCO NOW']},
+    {title:'Mortgage Approval',dur:'3-6 weeks',note:"Same offre de pret process. If bank refuses: condition suspensive returns your deposit in full.",pills:['10-day reflection after offer','If bank refuses: deposit returned']},
+    {title:'Acte Authentique — Final Signing',dur:'1 day',note:"Pay total purchase price + notary fees (7-8%) in one bank wire. Receive keys immediately. Full mortgage repayments start next month.",pills:['Price + 7-8% fees in one payment','Keys on same day','Full repayments start next month']},
+    {title:'Post-Purchase',dur:'Ongoing',note:"Assurance habitation mandatory from day 1. Notify syndic. Get renovation quotes. Plan energy works if DPE D or lower. Taxe fonciere first bill in 6-12 months.",pills:['Home insurance day 1','Notify syndic','Renovation quotes','Taxe fonciere in 6-12 months']},
+  ],'steps_ancien');
+
+  // Payment breakdown in Mortgage tab
+  var pctOfGross=function(x){return '('+( x/gMonth*100).toFixed(1)+'% gross)';};
+  var taxeNote=TYPE==='new'?'Exempt first 2 years for new builds':'Due from year 1';
+  document.getElementById('mg_pmt_breakdown').innerHTML=
+    '<div class="row-item"><div><div class="ri-label" style="font-weight:700">Total monthly housing budget</div><div class="ri-sub">What you set as your comfort target</div></div><div class="ri-val blue" style="font-size:18px">'+fmt(comfTotal)+'/mo</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">(-) Property charges</div><div class="ri-sub">charges copropriete — NOT in DTI</div></div><div class="ri-val red">-'+fmt(charges)+'/mo</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">(-) Taxe fonciere</div><div class="ri-sub">annual / 12 — NOT in DTI. '+taxeNote+'</div></div><div class="ri-val red">-'+fmt(taxeMonthly)+'/mo</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">(-) Mortgage insurance</div><div class="ri-sub">assurance emprunteur — IS in 35% DTI</div></div><div class="ri-val red">-'+fmt(insurance)+'/mo</div></div>'+
+    '<div style="border-top:2px solid var(--blue);margin:6px 0"></div>'+
+    '<div class="row-item" style="padding:12px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">= Available for bank EMI</div><div class="ri-sub">used to calculate your loan capacity</div></div><div class="ri-val green" style="font-size:20px">'+fmt(emiComf)+'/mo</div></div>'+
+    '<div class="insight blue" style="margin-top:8px"><span class="icon">i</span><div>Debt ratio used by the bank: EMI '+fmt(activeMo)+' + insurance '+fmt(insurance)+' = '+fmt(activeMo+insurance)+'/mo = <strong>'+(ratioUsed*100).toFixed(1)+'% of gross</strong>. Maximum allowed: 35% = '+fmt(maxPmt)+'/mo.</div></div>';
+
+  renderGloss('');
+}
+
+function buildSteps(steps,id){
+  document.getElementById(id).innerHTML=steps.map(function(s,i){
+    return '<div class="step-item"><div class="step-left"><div class="step-num">'+(i+1)+'</div><div class="step-line"></div></div><div class="step-content"><div class="step-title">'+s.title+'</div><div class="step-note">'+s.note+'</div><div class="step-pills">'+s.pills.map(function(p){return '<span class="step-pill">'+p+'</span>';}).join('')+'</div><div class="step-duration">Time: '+s.dur+'</div></div></div>';
+  }).join('');
+}
+
+var GLOSSARY=[
+  ['Acte Authentique de Vente','The final deed of sale signed at the notaire office. Ownership officially transfers at this moment.'],
+  ['Action Logement','Employer-funded housing scheme. Companies with 50+ staff contribute; employees can borrow up to 40,000 at ~1% for a primary residence.'],
+  ['Amiante','Asbestos. Pre-1997 buildings require an asbestos diagnostic in the DDT file.'],
+  ['Appel de Fonds','A staged payment call from the VEFA developer at each construction milestone.'],
+  ['Apport Personnel','Your personal down payment — the cash you contribute to the purchase.'],
+  ['Assurance Emprunteur','Mandatory borrower insurance (death, disability, incapacity). Can be purchased from any insurer (delegation) to save 5k-15k.'],
+  ['Assurance Habitation','Home insurance — legally mandatory from the day you receive the keys.'],
+  ['Attestation de Financement','Budget certificate from your bank or courtier. Required by all developers before they accept a reservation.'],
+  ["Avis d'Imposition",'French tax notice. Contains your revenu fiscal de reference — the income figure used for PTZ eligibility.'],
+  ['Bureau de Vente',"Developer's sales office / showroom. Where you visit model apartments and sign the contrat de reservation."],
+  ['Charges de Copropriete','Monthly co-ownership fees: building maintenance, insurance, elevator, cleaning. Typically 100-300/month.'],
+  ['Compromis de Vente','Preliminary sale agreement for old property. Binds both parties. Buyer has 10-day cooling-off right.'],
+  ['Condition Suspensive','A condition that must be met for the sale to proceed. Most important: mortgage approval.'],
+  ['Contrat de Reservation','VEFA reservation contract. You pay a deposit and have 10 days to withdraw penalty-free.'],
+  ['Courtier','Mortgage broker comparing 20+ banks on your behalf. Usually free (bank-paid). Essential for PTZ.'],
+  ['DDT','Dossier de Diagnostics Techniques — required diagnostics for old property: DPE, asbestos, lead, termites, electrics, gas, flood risk.'],
+  ['Delai de Reflexion','Mandatory 10-day period after receiving a mortgage offer. You cannot sign it before day 11.'],
+  ['Delai de Retractation','Mandatory 10-day cooling-off after signing a compromis or reservation. Buyer can withdraw penalty-free.'],
+  ['Depot de Garantie','Good-faith deposit (2-10%) paid at reservation/compromis. Held in notaire escrow.'],
+  ['DPE','Diagnostic de Performance Energetique — energy rating A (best) to G (worst). F/G properties banned from rental since 2025.'],
+  ['Frais de Notaire','Notary fees — mainly state taxes. 2-3% for new build; 7-8% for old property.'],
+  ['Garantie Biennale','2-year equipment warranty on a new build (heating, windows, plumbing).'],
+  ['Garantie Decennale','10-year structural warranty on new builds covering foundations, walls, roof.'],
+  ['Garantie de Parfait Achevement','1-year warranty: developer must fix any defect reported in the first year after livraison.'],
+  ['GFA','Garantie Financiere d Achevement — financial completion guarantee. If developer goes bankrupt, building will still be completed.'],
+  ['Grand Paris Express','New metro network (Lines 15-18) under construction around Paris. Improves outer-suburb connectivity. Opening 2025-2030.'],
+  ['Interets Intercalaires','Interest-only payments during VEFA construction on funds already released. Budget 200-600/month.'],
+  ['Livraison','Key handover for a new build. Inspect everything; document defects (reserves) in the PV de livraison.'],
+  ['Notaire','State-appointed legal officer. Mandatory for all property sales. Both parties can bring their own notaire.'],
+  ['Offre de Pret','Formal mortgage offer from your bank. Subject to mandatory 10-day reflection period before you can sign.'],
+  ['PEE','Plan d Epargne Entreprise — company savings plan. Early release for primary residence: gains are income-tax-exempt.'],
+  ['PERCO','Collective retirement savings plan. Same early-release rules as PEE for primary residence purchase.'],
+  ['Primo-Accedant','First-time buyer — has not owned a primary residence in the past 2 years. Unlocks PTZ.'],
+  ['Promoteur','Property developer. For VEFA, deal with them directly — no estate agent fee.'],
+  ['PTZ','Pret a Taux Zero — zero-interest government loan for first-time new-build buyers. Available until Dec 31, 2027.'],
+  ['PV de Livraison','Key-handover document. All defects (reserves) must be written here on day 1.'],
+  ['RE2020','French energy standard for new builds since 2022. Mandates DPE A or B.'],
+  ['Reserves','Defects noted at livraison. You can retain 5% of the price until all reserves are resolved.'],
+  ['Revenu Fiscal de Reference','Your household annual taxable income per the tax authority. Found on your avis d imposition. Used for PTZ.'],
+  ['Salaire Brut','Gross salary — before social charges. Used for the 35% taux d endettement calculation.'],
+  ['Salaire Net','Net salary — what you receive in your bank account (~75-80% of gross).'],
+  ['SHAB','Surface Habitable — legal living area. Excludes balcony, parking, areas below 1.8m ceiling.'],
+  ['Syndic de Copropriete','Management company of the shared building. Collects charges, manages maintenance.'],
+  ["Taux d'Endettement",'Debt-to-income ratio. Capped at 35% of gross monthly income by French banking law.'],
+  ['Taxe Fonciere','Annual property tax. New builds exempt for 2 years — file form 6650-H within 90 days of completion.'],
+  ['TMA','Travaux Modificatifs Acquereurs — optional finish/layout changes in VEFA before a construction deadline.'],
+  ['VEFA','Vente en l Etat Futur d Achevement — off-plan purchase of a new build. Standard legal framework for all new-build sales.'],
+  ['Vices Caches','Hidden defects in old property not visible at purchase. Seller may be liable for 2 years after discovery.'],
+];
+function renderGloss(q){
+  var fl=q.toLowerCase();
+  var items=GLOSSARY.filter(function(x){return !fl||x[0].toLowerCase().includes(fl)||x[1].toLowerCase().includes(fl);});
+  document.getElementById('gloss_list').innerHTML=items.map(function(x){
+    return '<div class="gloss-item"><div class="gloss-term">'+x[0]+'</div><div class="gloss-def">'+x[1]+'</div></div>';
+  }).join('')||'<div style="color:var(--muted);padding:16px 0">No terms match.</div>';
+}
+function filterGloss(v){renderGloss(v);}
+
+var FAQ=[
+  {t:['cash','hand','keep','apart','reserve','emergency','liquid','savings','extra','money','need','side'],a:'Apart from PEE/PERCO, you need cash on hand for several things: (1) Depot de garantie: 2-5% of purchase price (~6,000-15,000) paid at reservation — MUST come from cash, NOT PEE/PERCO. (2) Interets intercalaires during VEFA construction: 200-600/month for 18-30 months = budget 4,000-18,000 total. (3) Moving costs: 1,000-3,000 typically. (4) Furniture and fit-out (new builds are handed over bare — no kitchen, sometimes no flooring): budget 8,000-15,000 minimum. (5) 3-month emergency buffer for unexpected costs. Realistically, you want 15,000-25,000 in accessible cash/savings separate from your PEE/PERCO apport. This is separate from the apport itself.'},
+  {t:['ptz','amount','how much','get','calculate','estimate'],a:'Your PTZ estimate is shown in the PTZ & Loans screen. For Zone A with 2 persons, the quotite ranges from 20-50% of the project cost depending on your income tranche. PTZ is at 0% interest and available until Dec 31, 2027 for all new builds. Update the zone in My Profile to see amounts for Zone A bis vs A vs B1.'},
+  {t:['ptz','eligible','qualify','conditions','primo'],a:'Yes — as primo-accedants buying a new build, you qualify if: (1) VEFA/new build, (2) primo-accedant status (no primary residence owned in last 2 years), (3) income under the zone ceiling, (4) primary residence use only. PTZ is not available for old property.'},
+  {t:['zone','abis','bis','plessis','robinson','le plessis','different','which zone'],a:'Great news: Zone A bis is actually MORE generous than Zone A — it has HIGHER income ceilings and the same or better quotite. Le Plessis-Robinson is in Zone A bis, which means you would get BETTER PTZ there than in a Zone A commune. In the app, switch the PTZ Zone dropdown to "Zone A bis" to see your PTZ for Le Plessis-Robinson. You absolutely can buy in Le Plessis-Robinson and benefit from PTZ.'},
+  {t:['ptz','zone','a','b1','b2','abis','difference','mean','what is'],a:'Zone A bis (Paris + closest suburbs like Le Plessis-Robinson, Boulogne, Vincennes): highest income ceilings, best PTZ. Zone A (most of Ile-de-France: Noisy-le-Grand, Massy, Palaiseau): second best. Zone B1 (outer suburbs + major cities): moderate. Zone B2 (smaller towns): lower quotite. The zone is determined by WHERE THE PROPERTY IS, not where you live now. Set the zone in My Profile to match your target commune.'},
+  {t:['ptz','defer','repayment','when','pay back','start paying'],a:'PTZ has a deferred repayment period (differe) where you pay nothing on the PTZ portion — typically 5-15 years depending on your income tranche. During deferral, you only pay the standard bank mortgage. PTZ does NOT count toward the 35% taux d endettement during its deferred period, which is why it adds to your total purchasing power.'},
+  {t:['ptz','income','revenu','fiscal','reference','avis','imposition'],a:'Your income reference for PTZ is the MAXIMUM of: (a) revenu fiscal de reference from your 2024 avis d imposition, OR (b) total project cost divided by 9. Find your revenu fiscal de reference on your avis d imposition — it is usually lower than your gross salary. Enter it in My Profile under Fiscal Reference Income.'},
+  {t:['furniture','bare','kitchen','floor','finish','new build','handover','empty'],a:'New builds in France (VEFA) are typically handed over as bare shells: painted walls, basic flooring, but NO kitchen, sometimes no bathroom fixtures beyond basic plumbing, no lights in most rooms. Budget at minimum 8,000-15,000 for a 55-60sqm apartment: kitchen 4,000-8,000, lighting 1,000-2,000, window coverings 500-1,000, misc 1,000-3,000. Some programmes offer TMA (optional upgrades) before handover at extra cost.'},
+  {t:['intercalaire','intercalaires','interets','double','pay rent','construction period'],a:'During VEFA construction (18-30 months), you pay: (1) Your current rent, (2) Interets intercalaires: interest-only payments on funds already released to the developer, typically 200-600/month rising as construction progresses. Your full mortgage only starts after livraison (key handover). Total intercalaires over the build: 5,000-15,000 typically. This is the main cash drain during VEFA and must come from regular income/savings, not PEE/PERCO.'},
+  {t:['frais','notaire','fees','percent','cost','notary'],a:'Frais de notaire are mainly state taxes, not the notaire fee itself. New build (VEFA): ~2-3% of price. Old property: ~7-8%. On a 300k property: 6,000-9,000 (new) vs 21,000-24,000 (old). The 15,000+ saving on notary fees with new build is one of the biggest financial advantages for buyers with limited apport.'},
+  {t:['vefa','what','mean','off plan','plan'],a:"VEFA (Vente en l'Etat Futur d'Achevement) means off-plan purchase. You buy an apartment that doesn't exist yet, on paper. Payments are staged as construction advances: 35% at foundations, 70% at roof, 95% complete, 100% at handover. You get the keys 18-30 months after signing."},
+  {t:['vefa','long','duration','time','wait','months','when','key'],a:'From signing the contrat de reservation to getting keys: typically 18-30 months. During construction you pay interets intercalaires plus your rent. Your full mortgage only starts at livraison.'},
+  {t:['vefa','risk','danger','developer','bankrupt','safe'],a:'Main VEFA risks: (1) Delivery delays — ~50% of projects face 3-6 month delays (2) Developer insolvency — mitigated by mandatory GFA (completion guarantee). Always verify the GFA is explicitly in your contrat de reservation. (3) Spec changes — developer can modify some finishes within limits.'},
+  {t:['pee','perco','unlock','deblocage','when','how','savings','release'],a:'Your PEE and PERCO can be unlocked early for a primary residence purchase. Trigger: signing your contrat de reservation (VEFA) or compromis de vente (old property). You have 6 months from that signing date to request the unlock from your fund manager. Do it immediately on signing day — do not wait.'},
+  {t:['pee','perco','tax','charges','social','gain','exempt','fiscal'],a:'When you unlock PEE/PERCO for a primary residence: gains are EXEMPT from income tax. However, 17.2% social charges apply to the gains portion only. Principal contributions face zero charges. Example: 42,000 total with 20% gains (8,400) = you pay 17.2% x 8,400 = 1,445 in social charges. Net apport approximately 40,500.'},
+  {t:['action','logement','what','how','apply','eligible','employer'],a:'Action Logement is employer-funded housing. Companies with 50+ employees contribute; you can borrow up to 40,000 at ~1% for a primary residence. Ask your HR department (DRH) today. Apply within 6 months of signing your reservation or compromis — same window as PEE/PERCO.'},
+  {t:['courtier','broker','need','why','use','mortgage broker'],a:'A courtier compares 20+ banks and maximises your PTZ. For primo-accedants, a courtier is essentially mandatory. Most are free (bank-paid). Try pretto.fr, cafpi.fr, or meilleurtaux.com for a quick online simulation.'},
+  {t:['notaire','need','why','own','two','buyer','seller'],a:'A notaire is mandatory for every property sale. The seller has one; you can bring your own notaire as the buyer — fees are split, not doubled. Your own notaire gives you independent legal representation at no extra cost.'},
+  {t:['foreign','foreigner','expat','indian','non','french','buy','can','allowed'],a:'Yes, foreigners can buy property in France with no restrictions. French banks may request visa/carte de sejour documentation and sometimes prefer permanent residents. A courtier experienced with expats will navigate this smoothly. Your income is assessed identically (35% debt cap applies).'},
+  {t:['documents','need','required','list','dossier','bank','prepare'],a:"For your mortgage dossier: 3 latest payslips, 3 latest bank statements, 2 latest avis d'imposition, justificatif de domicile, passeports, carte de sejour if applicable, signed contrat de reservation or compromis."},
+  {t:['taux','endettement','35','percent','debt','cap','rule','limit'],a:'Taux d endettement is France debt-to-income ratio, capped at 35% of gross monthly income. For your profile: 75,600/12 = 6,300/month gross, so maximum payment = 6,300 x 35% = 2,205/month. This is the regulatory ceiling. The Comfortable scenario in Overview uses your own target (default 25%).'},
+  {t:['attestation','financement','certificate','budget','pre-approval'],a:'The attestation de financement is your budget certificate from a bank or courtier. All promoteurs (developers) require it before accepting your VEFA reservation. Get it from a courtier before you fall in love with a property.'},
+  {t:['compromis','vente','preliminary','agreement','old property'],a:"Compromis de vente is the preliminary sale agreement for old property. Binds both parties. Buyer gets 10-day cooling-off. You pay a depot de garantie (5-10%) into notaire escrow. Always include the condition suspensive d'obtention du pret."},
+  {t:['condition','suspensive','mortgage','refusal','protect','deposit'],a:"The condition suspensive d'obtention du pret means: if your mortgage is refused, the sale is cancelled and your deposit is returned in full. Always insist it is in your compromis or VEFA reservation."},
+  {t:['cooling','off','retractation','10','day','cancel','withdraw'],a:'You have a mandatory 10-day cooling-off after signing a compromis de vente or contrat de reservation. You can withdraw with zero penalty and get your deposit back. Day 0 = day after signing.'},
+  {t:['mortgage','offer','pret','reflection','10','day','sign','cannot'],a:'After your bank sends the offre de pret, French law mandates a 10-day delai de reflexion — you CANNOT sign before day 11. This is consumer protection you cannot waive.'},
+  {t:['assurance','emprunteur','insurance','borrower','delegation','save'],a:'Assurance emprunteur is mandatory with a mortgage. Your bank will push their own policy, but since the Lemoine law you can use any insurer. Shopping independently saves 5,000-15,000 over 25 years. Compare on meilleurtaux.com or reassurez-moi.fr.'},
+  {t:['gfa','completion','guarantee','developer','bankrupt','safe'],a:'GFA (Garantie Financiere d Achevement) is a mandatory pledge that if the developer goes bankrupt, a bank or insurer will fund completion. Ask to see the GFA document before signing your contrat de reservation. Walk away if they cannot show it.'},
+  {t:['garantie','decennale','10','year','warranty','structural','defect'],a:'The garantie decennale covers major structural defects for 10 years from livraison: foundations, load-bearing walls, roof, waterproofing. The developer and their insurer are jointly liable.'},
+  {t:['livraison','handover','key','inspection','reserve','check','snag'],a:'Livraison is your key handover. Inspect EVERY room. Write every defect (reserve) on the PV de livraison. Take photos of everything. You can retain 5% of the purchase price in escrow until all reserves are resolved. Never rush this inspection.'},
+  {t:['taxe','fonciere','annual','property','tax','exempt','new build'],a:'Taxe fonciere is the annual property tax. New builds are exempt for 2 years — but you must claim this. File form 6650-H with your local tax office within 90 days of livraison. Do not miss this.'},
+  {t:['tma','customise','modify','apartment','finish','change','kitchen'],a:'TMA (Travaux Modificatifs Acquereurs) are optional changes to your VEFA apartment before a construction deadline: moving a partition, changing tiles, upgrading the kitchen. Request in writing with the promoteur. Additional cost varies.'},
+  {t:['dpe','energy','rating','class','label','consumption','efficiency'],a:'DPE rates energy efficiency from A (best) to G (worst). New builds under RE2020 are guaranteed A or B — very low energy bills. Old property: F and G properties cannot be rented from 2025. Always check DPE before buying old property.'},
+  {t:['costs','all','total','budget','everything','breakdown','hidden','extra'],a:'Total cost breakdown when buying: (1) Purchase price. (2) Frais de notaire: 2-3% new, 7-8% old. (3) Depot de garantie: 2-5% at reservation (from cash, not PEE). (4) Interets intercalaires: 200-600/month during construction. (5) Assurance emprunteur: monthly for loan duration. (6) Furniture/fit-out for new build: 8,000-15,000 minimum. (7) Moving costs: 1,000-3,000. (8) Charges de copropriete: 100-300/month from day 1. (9) Taxe fonciere: annual (year 3 onwards for new builds). Budget 3-4% extra above the purchase price for new build; 10-12% for old.'},
+  {t:['what','next','step','start','begin','action','plan'],a:'Immediate action plan: (1) Today: ask HR about Action Logement eligibility. (2) This week: gather 3 payslips, 3 bank statements, 2 avis d imposition. Check PEE/PERCO balances online. (3) This week: consult a courtier at pretto.fr — get your attestation de financement. (4) Once certified: visit bureaux de vente for programmes in your target communes. See the Process tab for full step-by-step.'},
+  {t:['international','school','english','ib','india','bilingual','education','kids','child'],a:'Best options near your target communes: (1) LIEP (Lycee International de l Est Parisien) in Noisy-le-Grand — IB and bilingual French/English, physically in the commune. (2) Ecole Active Bilingue Jeannine Manuel — Paris, highly regarded. (3) Les Elfes and similar bilingual primaries near Massy/Palaiseau. Le Plessis-Robinson has excellent local schools (IPS score >120). Also check IPS scores at every local school — French public schools near Paris-Saclay are often very strong.'},
+  {t:['grand','paris','express','metro','gpe','line','transport','connectivity'],a:'Grand Paris Express adds ~200km of new metro lines. Key for your communes: Line 15 (circular inner ring, Noisy/Massy section opens 2025-2028), Line 18 (Orly to Versailles via Saclay — serves Palaiseau/Massy, opens 2026+). Properties near confirmed GPE stations see 10-20% price premium already built in. Check societedugrandparis.fr for exact opening dates.'},
+  {t:['commune','noisy','massy','plessis','palaiseau','robinson','recommend','area'],a:'Based on your requirements (no car, transport, international schools, child-friendly): (1) Le Plessis-Robinson (92) — safest commune in France, Zone A bis PTZ, 15 min to Paris. (2) Noisy-le-Grand (93) — LIEP international school, Zone A PTZ, RER A. (3) Massy (91) — TGV hub, Zone A, future GPE Line 18. (4) Palaiseau (91) — near Saclay campus, Zone A, GPE Line 18. All have good family amenities. Le Plessis-Robinson is our top pick for safety and school quality.'},
+  {t:['how','many','years','best','loan','term','15','20','25','duration'],a:'25 years gives the most borrowing capacity for the same monthly payment — crucial with a limited apport. Each extra 5 years adds ~40,000-50,000 of capacity. With PTZ at 0% covering part of the loan, the effective interest rate on the total is much lower than the headline rate. 25 years is the most common choice for primo-accedants.'},
+  {t:['primo','accedant','first','time','buyer','status','definition'],a:'Primo-accedant means you have not owned your primary residence at any point in the last 2 years. Owning property abroad does not disqualify you in France — confirm with your courtier. Unlocks: PTZ, Action Logement priority, and sometimes preferential bank rates.'},
+  {t:['rent','both','double','construction','paying','during','while'],a:'During VEFA construction (18-30 months), you pay rent + interets intercalaires (200-600/month). Full mortgage starts only at livraison. Budget this double payment period carefully — it is the main cash flow challenge of VEFA. Having 10,000-15,000 in liquid savings for this phase is strongly recommended.'},
+  {t:['negotiate','price','new','build','discount','reduction'],a:'New builds: price generally fixed, but you can negotiate parking inclusion, TMA upgrades at no cost, or price reductions on last units at end of quarter. Old property: 3-10% off asking price is normal and expected. The 2025-2026 market gives buyers more leverage.'},
+  {t:['depot','garantie','deposit','reservation','percent','how much','cash needed','upfront'],a:'At reservation (VEFA), you pay 2-5% of the purchase price as the depot de garantie. This MUST come from cash in your bank account — you cannot use PEE/PERCO funds that are still locked. On a 300,000 property: 6,000-15,000 due at signing. This is one key reason to keep liquid cash separate from your PEE/PERCO apport.'},
+  {t:['syndic','charges','copropriete','monthly','maintenance','building'],a:'Monthly charges de copropriete cover: building maintenance, cleaning, elevator, insurance, common area electricity, sometimes heating/hot water. New builds: typically 100-200/month. Older buildings: can be 250-500/month, especially with upcoming renovation votes. Always ask for the last 3 years of comptes de syndic before buying old property.'},
+  {t:['moving','cost','frais','demenagement','how much','budget'],a:'Moving costs in France: local move in Paris region typically 1,000-3,000 depending on volume. International moves (if you are bringing belongings from abroad) can be 3,000-8,000+. For VEFA, you have 18-30 months notice so you can budget carefully. Note that new builds are handed over bare — furniture and kitchen must be bought fresh.'},
+];
+
+function matchFAQ(input){
+  var words=input.toLowerCase().split(/\W+/).filter(function(w){return w.length>2;});
+  var best=null,bestScore=0;
+  FAQ.forEach(function(item){
+    var score=0;
+    item.t.forEach(function(tag){
+      var tagWords=tag.split(' ');
+      if(tagWords.length>1){
+        // multi-word tag: check if input contains the phrase
+        if(input.toLowerCase().includes(tag)) score+=3;
+      } else {
+        if(words.some(function(w){return w===tag||w.includes(tag)||(tag.length>4&&tag.includes(w));})) score++;
+      }
+    });
+    if(score>bestScore){bestScore=score;best=item;}
+  });
+  return bestScore>=1?best:null;
+}
+
+
+function appendMsg(text,role){
+  var el=document.createElement('div');
+  el.className='chat-bubble '+role;
+  el.innerHTML=text;
+  document.getElementById('chat_messages').appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'end'});
+  return el;
+}
+function showTyping(){
+  var el=document.createElement('div');
+  el.className='chat-bubble bot typing';
+  el.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  el.id='typing_indicator';
+  document.getElementById('chat_messages').appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'end'});
+}
+function removeTyping(){var el=document.getElementById('typing_indicator');if(el)el.remove();}
+
+function ask(q){document.getElementById('chat_input').value=q;sendChat();}
+
+function sendChat(){
+  var input=document.getElementById('chat_input');
+  var q=input.value.trim();
+  if(!q)return;
+  if(getQL()<=0){
+    appendMsg('You have reached your 20 questions for today. Resets at midnight. For more questions, visit <a href="https://claude.ai" target="_blank" style="color:var(--blue)">Claude.ai</a>.','bot');
+    return;
+  }
+  useQ();
+  appendMsg(q,'user');
+  input.value='';
+  showTyping();
+  setTimeout(function(){
+    removeTyping();
+    var match=matchFAQ(q);
+    if(match){
+      appendMsg(match.a,'bot');
+    } else {
+      appendMsg('I do not have a specific answer for that. Try:<br><br><strong>Numbers</strong> — Overview or Mortgage tab<br><strong>PTZ details</strong> — PTZ & Loans tab<br><strong>Purchase steps</strong> — Process tab<br><strong>French terms</strong> — Glossary tab<br><br>For complex questions: <a href="https://claude.ai" target="_blank" style="color:var(--blue)">Claude.ai</a> or expatriates.com forums.','bot');
+    }
+  },800);
+}
+
+calculate();
+updateQC();
+</script>
+
+<nav class="mob-nav" id="mob_nav">
+  <button class="mob-nav-item active" onclick="go('overview',this,true)"><span class="mni">&#127968;</span>Overview</button>
+  <button class="mob-nav-item" onclick="go('mortgage',this,true)"><span class="mni">&#128202;</span>Mortgage</button>
+  <button class="mob-nav-item" onclick="go('subsidies',this,true)"><span class="mni">&#127963;</span>PTZ</button>
+  <button class="mob-nav-item" onclick="go('budget',this,true)"><span class="mni">&#128176;</span>Budget</button>
+  <button class="mob-nav-item" onclick="mobMore(this)"><span class="mni">&#8943;</span>More</button>
+</nav>
+
+<!-- Mobile "More" sheet -->
+<div id="mob_more_sheet" style="display:none;position:fixed;bottom:60px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);border-radius:18px 18px 0 0;z-index:199;padding:16px;box-shadow:0 -4px 24px rgba(0,0,0,.12)">
+  <div style="text-align:center;margin-bottom:14px;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase">More screens</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button onclick="go('profile',null,true)" style="padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px">&#128100; My Profile</button>
+    <button onclick="go('compare',null,true)" style="padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px">&#9878;&#65039; New vs Old</button>
+    <button onclick="go('process',null,true)" style="padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px">&#128203; Process</button>
+    <button onclick="go('glossary',null,true)" style="padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px">&#128214; Glossary</button>
+    <button onclick="go('chat',null,true)" style="padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--blue-lt);border-color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--blue)">&#128172; Ask a Question</button>
+  </div>
+</div>
+<div id="mob_more_backdrop" onclick="closeMobMore()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:198"></div>
+
+</body>
+</html>
