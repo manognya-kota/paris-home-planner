@@ -260,6 +260,7 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
   <button class="nav-item" onclick="go('mortgage',this)"><span class="icon">&#128202;</span> Mortgage</button>
   <button class="nav-item" onclick="go('subsidies',this)"><span class="icon">&#127963;</span> PTZ &amp; Loans</button>
   <button class="nav-item" onclick="go('budget',this)"><span class="icon">&#128176;</span> Budget Plan</button>
+  <button class="nav-item" onclick="go('reverse',this)"><span class="icon">&#128257;</span> Property &#8594; EMI</button>
   <div class="nav-section-label">Explore</div>
   <button class="nav-item" onclick="go('compare',this)"><span class="icon">&#9878;&#65039;</span> New vs Old</button>
   <button class="nav-item" onclick="go('process',this)"><span class="icon">&#128203;</span> Process</button>
@@ -298,6 +299,7 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
     <div style="font-size:11px;color:var(--muted);margin-bottom:12px" id="ov_mode_note">Comfortable target — edit in Mortgage tab</div>
     <div class="row-item"><div><div class="ri-label">Bank EMI</div><div class="ri-sub">goes toward mortgage repayment</div></div><div class="ri-val blue" id="ov_emi">--</div></div>
     <div class="row-item"><div><div class="ri-label">Mortgage insurance</div><div class="ri-sub">assurance emprunteur — counts in 35% DTI</div></div><div class="ri-val" id="ov_ins">--</div></div>
+    <div class="row-item" id="ov_al_row" style="display:none"><div><div class="ri-label">Action Logement EMI</div><div class="ri-sub">~1% loan repayment — counts in 35% DTI</div></div><div class="ri-val" id="ov_al_emi">--</div></div>
     <div class="row-item"><div><div class="ri-label">Property charges</div><div class="ri-sub">charges copropriete — not in DTI</div></div><div class="ri-val" id="ov_chrg">--</div></div>
     <div class="row-item"><div><div class="ri-label">Taxe fonciere</div><div class="ri-sub">monthly equivalent — not in DTI</div></div><div class="ri-val" id="ov_txmo">--</div></div>
     <div class="row-item" style="padding:12px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total monthly housing cost</div></div><div class="ri-val" style="font-size:18px;font-weight:800;color:var(--blue)" id="ov_total_mo">--</div></div>
@@ -378,6 +380,14 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
       </div>
       <div class="field"><label>Taxe Fonciere <span class="hint">(annual — exempt 2 yrs for new builds)</span></label><div class="input-wrap has-suffix"><span class="prefix">&#8364;</span><input type="number" id="f_taxe" value="1200" step="100" oninput="calculate()"/><span class="suffix">/yr</span></div></div>
     </div>
+    <div class="form-section" style="margin-bottom:0">
+      <div class="form-section-title">Cash Planning &mdash; What You Need Upfront</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Separate from your apport. These come from liquid cash and show up in the Budget Plan tab.</div>
+      <div class="field-row">
+        <div class="field"><label>Deposit <span class="hint">(depot de garantie)</span></label><div class="input-wrap has-suffix"><input type="number" id="f_deposit_pct" value="5" step="0.5" oninput="calculate()"/><span class="suffix">%</span></div></div>
+        <div class="field"><label>Furniture &amp; Kitchen Budget</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="f_furniture" value="10000" step="500" oninput="calculate()"/></div></div>
+      </div>
+    </div>
     <button class="calc-btn" onclick="calculate()">Recalculate &#8594;</button>
   </div>
 </section>
@@ -412,6 +422,10 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
   <div class="card">
     <div class="card-label" style="margin-bottom:10px">Payment Breakdown — How your budget is split</div>
     <div id="mg_pmt_breakdown"></div>
+  </div>
+  <div class="card">
+    <div class="card-label" style="margin-bottom:10px">Interest You'll Pay</div>
+    <div id="mg_interest"></div>
   </div>
 </section>
 
@@ -467,6 +481,91 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
   </div>
   <div class="card"><div class="card-label" style="margin-bottom:10px">Apport (PEE + PERCO)</div><div id="bg_savings"></div></div>
   <div class="card"><div class="card-label" style="margin-bottom:10px">Net Property Budget After Fees</div><div id="bg_after_fees"></div></div>
+  <div class="card"><div class="card-label" style="margin-bottom:10px">Cash You Need Upfront</div><div id="bg_cash"></div></div>
+</section>
+
+<section class="screen" id="screen-reverse">
+  <div class="screen-header"><h2>Property &#8594; EMI</h2><p>Enter a specific property you're evaluating (independent of your Profile) and see the monthly EMI + cash you'd need</p></div>
+  <div class="card">
+    <div class="form-section">
+      <div class="form-section-title">Property</div>
+      <div class="field-row">
+        <div class="field"><label>Property Price</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_price" value="330000" step="1000" oninput="calcReverse()"/></div></div>
+        <div class="field"><label>Discount / Offer <span class="hint">(one-time reduction)</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_discount" value="0" step="500" oninput="calcReverse()"/></div></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Property Type</label><select id="rv_type" onchange="calcReverse()"><option value="new" selected>New build (VEFA)</option><option value="old">Old property (Ancien)</option></select></div>
+        <div class="field"><label>PTZ Zone</label><select id="rv_zone" onchange="calcReverse()"><option value="Abis">Zone A bis</option><option value="A" selected>Zone A</option><option value="B1">Zone B1</option><option value="B2">Zone B2</option></select></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Eligibility</div>
+      <div class="field-row">
+        <div class="field"><label>Household size</label><select id="rv_household" onchange="calcReverse()"><option value="1">1 person</option><option value="2" selected>2 persons</option><option value="3">3 persons</option><option value="4">4 persons</option><option value="5">5+ persons</option></select></div>
+        <div class="field"><label>Fiscal Reference Income <span class="hint">(for PTZ)</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_fiscal" value="66000" step="500" oninput="calcReverse()"/></div></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Use PTZ?</label><select id="rv_use_ptz" onchange="calcReverse()"><option value="yes" selected>Yes</option><option value="no">No</option></select></div>
+        <div class="field"><label>Action Logement eligible?</label><select id="rv_al" onchange="calcReverse()"><option value="yes" selected>Yes</option><option value="no">No / Unknown</option></select></div>
+      </div>
+      <div class="field"><label>Action Logement amount <span class="hint">up to 40k at ~1%</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_alamt" value="30000" step="1000" max="40000" oninput="calcReverse()"/></div></div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Financing</div>
+      <div class="field-row">
+        <div class="field"><label>Your Apport for this property</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_apport" value="30000" step="1000" oninput="calcReverse()"/></div></div>
+        <div class="field"><label>Loan Term</label><select id="rv_term" onchange="calcReverse()"><option value="15">15 years</option><option value="20">20 years</option><option value="25" selected>25 years</option></select></div>
+      </div>
+      <div class="field"><label>Bank Interest Rate <span class="hint">edit if you have a real quote</span></label><div class="input-wrap has-suffix"><input type="number" id="rv_rate" value="3.48" step="0.01" oninput="calcReverse()"/><span class="suffix">%</span></div></div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Monthly Running Costs <span class="hint">(editable &mdash; specific to this property)</span></div>
+      <div class="field-row">
+        <div class="field"><label>Mortgage Insurance</label><div class="input-wrap has-suffix"><span class="prefix">&#8364;</span><input type="number" id="rv_insurance" value="80" step="5" oninput="calcReverse()"/><span class="suffix">/mo</span></div></div>
+        <div class="field"><label>Property Charges <span class="hint">(charges copropriete)</span></label><div class="input-wrap has-suffix"><span class="prefix">&#8364;</span><input type="number" id="rv_charges" value="150" step="10" oninput="calcReverse()"/><span class="suffix">/mo</span></div></div>
+      </div>
+      <div class="field"><label>Taxe Fonciere <span class="hint">(annual)</span></label><div class="input-wrap has-suffix"><span class="prefix">&#8364;</span><input type="number" id="rv_taxe" value="1200" step="100" oninput="calcReverse()"/><span class="suffix">/yr</span></div></div>
+    </div>
+    <div class="form-section" style="margin-bottom:0">
+      <div class="form-section-title">Cash Required Upfront</div>
+      <div class="field-row">
+        <div class="field"><label>Deposit <span class="hint">(depot de garantie)</span></label><div class="input-wrap has-suffix"><input type="number" id="rv_deposit_pct" value="5" step="0.5" oninput="calcReverse()"/><span class="suffix">%</span></div></div>
+        <div class="field"><label>Furniture &amp; Kitchen</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_furniture" value="10000" step="500" oninput="calcReverse()"/></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-card blue-grad">
+    <div class="label">Monthly EMI (Bank Loan)</div>
+    <div class="amount" id="rv_emi">--</div>
+    <div class="sub" id="rv_emi_sub">--</div>
+    <div class="hero-meta">
+      <div class="hm"><div class="hm-label">+ Insurance</div><div class="hm-val" id="rv_ins_m">--</div></div>
+      <div class="hm"><div class="hm-label">+ AL EMI</div><div class="hm-val" id="rv_al_m">--</div></div>
+      <div class="hm"><div class="hm-label">+ Charges &amp; Taxe</div><div class="hm-val" id="rv_ct_m">--</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label" style="margin-bottom:2px">Total Monthly Cost (all-in)</div>
+    <div class="card-value green" id="rv_total_mo">--</div>
+    <div style="margin-top:10px" id="rv_monthly_breakdown"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label" style="margin-bottom:10px">How the Price is Financed</div>
+    <div id="rv_financing"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label" style="margin-bottom:10px">Interest You'll Pay</div>
+    <div id="rv_interest"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label" style="margin-bottom:10px">Cash Required Upfront (Before Moving In)</div>
+    <div id="rv_cash"></div>
+  </div>
 </section>
 
 <section class="screen" id="screen-compare">
@@ -617,13 +716,19 @@ function calculate(){
   var taxeMonthly=taxeAnnual/12;
   var gMonth=G/12;
   var maxPmt=gMonth*0.35;
-  // comfTotal = total monthly housing budget (all-in: EMI + insurance + charges + taxe)
+  // Action Logement is a real ~1% loan with its own repayment — compute its EMI first
+  // so it can be folded into the DTI cap like any other loan.
+  var alLoan=(AL_Y&&useWifAL)?AL_A:0;
+  var AL_RATE=0.01;
+  var alEmi=alLoan>0?monthly(alLoan,AL_RATE,TERM):0;
+  var alInterestTotal=alLoan>0?Math.max(0,alEmi*TERM*12-alLoan):0;
+  // comfTotal = total monthly housing budget (all-in: EMI + insurance + AL EMI + charges + taxe)
   var comfTotal=customTarget>0?customTarget:Math.round(gMonth*0.25);
-  // EMI available after deducting non-mortgage costs
-  var emiComf=Math.max(50,comfTotal-insurance-charges-taxeMonthly);
-  // Max scenario: 35% DTI covers EMI + insurance only (charges/taxe not in French DTI)
-  var maxEmi=Math.max(0,maxPmt-insurance);
-  var maxTotal=maxEmi+insurance+charges+taxeMonthly;
+  // EMI available after deducting non-mortgage costs (incl. AL EMI)
+  var emiComf=Math.max(50,comfTotal-insurance-alEmi-charges-taxeMonthly);
+  // Max scenario: 35% DTI covers EMI + insurance + AL EMI (charges/taxe not in French DTI)
+  var maxEmi=Math.max(0,maxPmt-insurance-alEmi);
+  var maxTotal=maxEmi+insurance+alEmi+charges+taxeMonthly;
   // Active values depend on scenario
   var activeEmi=scenarioMode==='maximum'?maxEmi:emiComf;
   var activeTotal=scenarioMode==='maximum'?maxTotal:comfTotal;
@@ -633,7 +738,6 @@ function calculate(){
   var social=gains*0.172;
   var apportFull=Math.max(0,totalSav-social-CHLD);
   var apport=useWifAp?apportFull:0;
-  var alLoan=(AL_Y&&useWifAL)?AL_A:0;
   var pd=PTZ_DB[ZONE]||PTZ_DB.A;
   var maxOp=pd.maxOp[HH]||pd.maxOp[5];
   var incRef=Math.max(FIS,PRICE/9);
@@ -646,7 +750,8 @@ function calculate(){
   var ptzSave=ptzFull*AVG[TERM]*TERM*0.5;
   var capActive=loanCap(activeEmi,AVG[TERM],TERM);
   var activeMo=monthly(capActive,AVG[TERM],TERM);
-  var ratioUsed=(activeMo+insurance)/gMonth; // DTI = EMI + insurance
+  var ratioUsed=(activeMo+insurance+alEmi)/gMonth; // DTI = EMI + insurance + AL EMI
+  var bankInterestTotal=Math.max(0,activeMo*TERM*12-capActive);
   var totalBudget=apport+capActive+ptzAmt+alLoan;
   var notaryNew=PRICE*0.025;
   var notaryOld=PRICE*0.075;
@@ -654,6 +759,12 @@ function calculate(){
   var netOld=totalBudget-notaryOld;
   var bankNeeded=Math.max(0,PRICE-apport-ptzAmt-alLoan);
   var isAffordable=bankNeeded<=capActive;
+  // Cash planning — what you need upfront, separate from apport
+  var depositPct=(+document.getElementById('f_deposit_pct').value||5)/100;
+  var furnitureBudget=+document.getElementById('f_furniture').value||0;
+  var depositAmt=PRICE*depositPct;
+  var notaryFeeActive=TYPE==='new'?notaryNew:notaryOld;
+  var totalCashUpfront=depositAmt+notaryFeeActive+furnitureBudget;
 
   document.getElementById('mode-comfortable').textContent='Comfortable - '+fmt(comfTotal)+'/mo total';
   document.getElementById('ov_total').textContent=fmt(totalBudget);
@@ -663,6 +774,8 @@ function calculate(){
   // Overview breakdown
   document.getElementById('ov_emi').textContent=fmt(activeMo)+'/mo';
   document.getElementById('ov_ins').textContent=fmt(insurance)+'/mo';
+  document.getElementById('ov_al_row').style.display=alEmi>0?'flex':'none';
+  document.getElementById('ov_al_emi').textContent=fmt(alEmi)+'/mo';
   document.getElementById('ov_chrg').textContent=fmt(charges)+'/mo';
   document.getElementById('ov_txmo').textContent=fmt(taxeMonthly)+'/mo';
   document.getElementById('ov_total_mo').textContent=fmt(activeTotal)+'/mo';
@@ -684,6 +797,9 @@ function calculate(){
   setImpact('wif_ptz_impact',ptzFull,useWifPTZ);
   setImpact('wif_ap_impact',apportFull,useWifAp);
   setImpact('wif_al_impact',AL_Y?AL_A:0,useWifAL);
+  if(AL_Y&&useWifAL&&alEmi>0){
+    document.getElementById('wif_al_impact').textContent='Adds '+fmt(AL_A)+' to budget, costs '+fmt(alEmi)+'/mo at ~1%';
+  }
 
   var ins=document.getElementById('ov_insight_text');
   if(!useWifPTZ&&!useWifAp&&!useWifAL)
@@ -749,7 +865,9 @@ function calculate(){
     '<div class="row-item"><div class="ri-label">Employer participates?</div><div class="ri-val '+(AL_Y?'green':'amber')+'">'+(AL_Y?'Yes':'Ask HR')+'</div></div>'+
     '<div class="row-item"><div><div class="ri-label">Loan amount (up to 40,000)</div></div><div class="ri-val">'+fmt(AL_Y?AL_A:0)+'</div></div>'+
     '<div class="row-item"><div class="ri-label">Interest rate</div><div class="ri-val green">~1%</div></div>'+
-    '<div class="row-item"><div class="ri-label">Duration</div><div class="ri-val">Up to 25 years</div></div>'+
+    '<div class="row-item"><div class="ri-label">Duration</div><div class="ri-val">'+TERM+' years (matches your loan term)</div></div>'+
+    (alEmi>0?'<div class="row-item"><div><div class="ri-label">Monthly EMI</div><div class="ri-sub">counts toward your 35% DTI cap</div></div><div class="ri-val blue">'+fmt(alEmi)+'/mo</div></div>':'')+
+    (alEmi>0?'<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Interest over '+TERM+' years</div></div><div class="ri-val" style="font-size:18px;font-weight:800">'+fmt(alInterestTotal)+'</div></div>':'')+
     '<div class="insight '+(AL_Y?'blue':'amber')+'" style="margin:12px 0 0"><span class="icon">i</span><div>'+(AL_Y?'Apply within 6 months of signing your reservation or compromis. Contact actionlogement.fr or your HR.':'Ask your HR if your company participates. Companies with 50+ employees typically do.')+'</div></div>';
 
   document.getElementById('bg_total').textContent=fmt(totalBudget);
@@ -772,6 +890,12 @@ function calculate(){
     '<div class="row-item"><div><div class="ri-label">New build (2.5% fees)</div></div><div class="ri-val green">'+fmt(netNew)+'</div></div>'+
     '<div class="row-item"><div><div class="ri-label">Old property (7.5% fees)</div></div><div class="ri-val amber">'+fmt(netOld)+'</div></div>'+
     '<div class="row-item"><div class="ri-label">Fee saving (new vs old)</div><div class="ri-val green">'+fmt(notaryOld-notaryNew)+'</div></div>';
+  document.getElementById('bg_cash').innerHTML=
+    '<div class="row-item"><div><div class="ri-label">Deposit</div><div class="ri-sub">depot de garantie — '+(depositPct*100).toFixed(1)+'% of price</div></div><div class="ri-val">'+fmt(depositAmt)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Notary fee</div><div class="ri-sub">'+(TYPE==='new'?'~2.5% new build':'~7.5% old property')+'</div></div><div class="ri-val">'+fmt(notaryFeeActive)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Furniture &amp; kitchen</div><div class="ri-sub">new builds are handed over bare</div></div><div class="ri-val">'+fmt(furnitureBudget)+'</div></div>'+
+    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total cash needed upfront</div></div><div class="ri-val amber" style="font-size:20px">'+fmt(totalCashUpfront)+'</div></div>'+
+    '<div class="insight blue" style="margin-top:4px"><span class="icon">i</span><div>Separate from your PEE/PERCO apport, which stays locked until you sign. Edit deposit % and furniture budget in My Profile.</div></div>';
 
   function cmpR(k,v){return '<div class="cmp-row"><span class="cmp-key">'+k+'</span><span class="cmp-val">'+v+'</span></div>';}
   document.getElementById('cmp_new').innerHTML=[
@@ -823,11 +947,109 @@ function calculate(){
     '<div class="row-item"><div><div class="ri-label">(-) Property charges</div><div class="ri-sub">charges copropriete — NOT in DTI</div></div><div class="ri-val red">-'+fmt(charges)+'/mo</div></div>'+
     '<div class="row-item"><div><div class="ri-label">(-) Taxe fonciere</div><div class="ri-sub">annual / 12 — NOT in DTI. '+taxeNote+'</div></div><div class="ri-val red">-'+fmt(taxeMonthly)+'/mo</div></div>'+
     '<div class="row-item"><div><div class="ri-label">(-) Mortgage insurance</div><div class="ri-sub">assurance emprunteur — IS in 35% DTI</div></div><div class="ri-val red">-'+fmt(insurance)+'/mo</div></div>'+
+    (alEmi>0?'<div class="row-item"><div><div class="ri-label">(-) Action Logement EMI</div><div class="ri-sub">~1% loan repayment — IS in 35% DTI</div></div><div class="ri-val red">-'+fmt(alEmi)+'/mo</div></div>':'')+
     '<div style="border-top:2px solid var(--blue);margin:6px 0"></div>'+
     '<div class="row-item" style="padding:12px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">= Available for bank EMI</div><div class="ri-sub">used to calculate your loan capacity</div></div><div class="ri-val green" style="font-size:20px">'+fmt(emiComf)+'/mo</div></div>'+
-    '<div class="insight blue" style="margin-top:8px"><span class="icon">i</span><div>Debt ratio used by the bank: EMI '+fmt(activeMo)+' + insurance '+fmt(insurance)+' = '+fmt(activeMo+insurance)+'/mo = <strong>'+(ratioUsed*100).toFixed(1)+'% of gross</strong>. Maximum allowed: 35% = '+fmt(maxPmt)+'/mo.</div></div>';
+    '<div class="insight blue" style="margin-top:8px"><span class="icon">i</span><div>Debt ratio used by the bank: EMI '+fmt(activeMo)+' + insurance '+fmt(insurance)+(alEmi>0?' + AL EMI '+fmt(alEmi):'')+' = '+fmt(activeMo+insurance+alEmi)+'/mo = <strong>'+(ratioUsed*100).toFixed(1)+'% of gross</strong>. Maximum allowed: 35% = '+fmt(maxPmt)+'/mo.</div></div>';
+
+  document.getElementById('mg_interest').innerHTML=
+    '<div class="row-item"><div><div class="ri-label">Bank loan interest</div><div class="ri-sub">total over '+TERM+' years at '+pct(AVG[TERM])+'</div></div><div class="ri-val red">'+fmt(bankInterestTotal)+'</div></div>'+
+    (alLoan>0?'<div class="row-item"><div><div class="ri-label">Action Logement interest</div><div class="ri-sub">~1% over '+TERM+' years</div></div><div class="ri-val red">'+fmt(alInterestTotal)+'</div></div>':'')+
+    (ptzAmt>0?'<div class="row-item"><div><div class="ri-label">PTZ interest saved</div><div class="ri-sub">vs paying '+pct(AVG[TERM])+' on this amount</div></div><div class="ri-val green">'+fmt(ptzSave)+'</div></div>':'')+
+    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total repaid (bank loan + AL)</div><div class="ri-sub">principal + interest, both loans</div></div><div class="ri-val" style="font-size:18px;font-weight:800">'+fmt(capActive+bankInterestTotal+alLoan+alInterestTotal)+'</div></div>';
 
   renderGloss('');
+}
+
+function calcPTZ(ZONE,HH,FIS,PRICE,TYPE){
+  var pd=PTZ_DB[ZONE]||PTZ_DB.A;
+  var maxOp=pd.maxOp[HH]||pd.maxOp[5];
+  var incRef=Math.max(FIS,PRICE/9);
+  var tranche=-1;
+  for(var i=0;i<pd.t.length;i++){if(incRef<=pd.t[i].max){tranche=i;break;}}
+  var quotite=tranche>=0?pd.t[tranche].q:0;
+  var ptzBase=Math.min(PRICE,maxOp);
+  var ptzFull=(TYPE==='new'&&tranche>=0)?ptzBase*quotite:0;
+  return {ptzFull:ptzFull,quotite:quotite,tranche:tranche,incRef:incRef,ptzBase:ptzBase,maxOp:maxOp};
+}
+
+function calcReverse(){
+  var PRICE=+document.getElementById('rv_price').value||0;
+  var DISC=+document.getElementById('rv_discount').value||0;
+  var TYPE=document.getElementById('rv_type').value;
+  var ZONE=document.getElementById('rv_zone').value;
+  var HH=Math.min(5,Math.max(1,+document.getElementById('rv_household').value||2));
+  var FIS=+document.getElementById('rv_fiscal').value||0;
+  var usePTZ=document.getElementById('rv_use_ptz').value==='yes';
+  var AL_Y=document.getElementById('rv_al').value==='yes';
+  var AL_A=+document.getElementById('rv_alamt').value||0;
+  var APPORT=+document.getElementById('rv_apport').value||0;
+  var TERM=+document.getElementById('rv_term').value||25;
+  var RATE=(+document.getElementById('rv_rate').value||3.48)/100;
+  var INS=+document.getElementById('rv_insurance').value||0;
+  var CHG=+document.getElementById('rv_charges').value||0;
+  var TAXE_Y=+document.getElementById('rv_taxe').value||0;
+  var TAXE_M=TAXE_Y/12;
+  var DEP_PCT=(+document.getElementById('rv_deposit_pct').value||0)/100;
+  var FURN=+document.getElementById('rv_furniture').value||0;
+
+  var effPrice=Math.max(0,PRICE-DISC);
+  var ptz=calcPTZ(ZONE,HH,FIS,effPrice,TYPE);
+  var ptzAmt=usePTZ?ptz.ptzFull:0;
+  var alLoan=AL_Y?AL_A:0;
+  var AL_RATE=0.01;
+  var alEmi=alLoan>0?monthly(alLoan,AL_RATE,TERM):0;
+  var alInterest=alLoan>0?Math.max(0,alEmi*TERM*12-alLoan):0;
+
+  var bankNeeded=Math.max(0,effPrice-APPORT-ptzAmt-alLoan);
+  var bankEmi=monthly(bankNeeded,RATE,TERM);
+  var bankInterest=Math.max(0,bankEmi*TERM*12-bankNeeded);
+  var ptzSave=ptzAmt*RATE*TERM*0.5;
+
+  var totalMonthly=bankEmi+INS+alEmi+CHG+TAXE_M;
+
+  var deposit=effPrice*DEP_PCT;
+  var notaryRate=TYPE==='new'?0.025:0.075;
+  var notaryFee=effPrice*notaryRate;
+  var totalCash=deposit+notaryFee+FURN;
+
+  document.getElementById('rv_emi').textContent=fmt(bankEmi);
+  document.getElementById('rv_emi_sub').textContent='Loan of '+fmt(bankNeeded)+' over '+TERM+' yrs at '+pct(RATE);
+  document.getElementById('rv_ins_m').textContent=fmt(INS)+'/mo';
+  document.getElementById('rv_al_m').textContent=alEmi>0?fmt(alEmi)+'/mo':'--';
+  document.getElementById('rv_ct_m').textContent=fmt(CHG+TAXE_M)+'/mo';
+  document.getElementById('rv_total_mo').textContent=fmt(totalMonthly)+'/mo';
+
+  document.getElementById('rv_monthly_breakdown').innerHTML=
+    '<div class="row-item"><div><div class="ri-label">Bank EMI</div><div class="ri-sub">'+TERM+' yrs at '+pct(RATE)+'</div></div><div class="ri-val blue">'+fmt(bankEmi)+'/mo</div></div>'+
+    (alEmi>0?'<div class="row-item"><div><div class="ri-label">Action Logement EMI</div><div class="ri-sub">~1% over '+TERM+' yrs</div></div><div class="ri-val blue">'+fmt(alEmi)+'/mo</div></div>':'')+
+    '<div class="row-item"><div><div class="ri-label">Mortgage insurance</div></div><div class="ri-val">'+fmt(INS)+'/mo</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Property charges</div></div><div class="ri-val">'+fmt(CHG)+'/mo</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Taxe fonciere</div><div class="ri-sub">annual / 12</div></div><div class="ri-val">'+fmt(TAXE_M)+'/mo</div></div>'+
+    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total all-in</div></div><div class="ri-val green" style="font-size:20px">'+fmt(totalMonthly)+'/mo</div></div>';
+
+  document.getElementById('rv_financing').innerHTML=
+    '<div class="row-item"><div><div class="ri-label">Property price</div></div><div class="ri-val">'+fmt(PRICE)+'</div></div>'+
+    (DISC>0?'<div class="row-item"><div><div class="ri-label">Discount / offer</div></div><div class="ri-val green">-'+fmt(DISC)+'</div></div>':'')+
+    '<div class="row-item"><div><div class="ri-label" style="font-weight:700">Effective price</div></div><div class="ri-val" style="font-weight:700">'+fmt(effPrice)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Your apport</div></div><div class="ri-val">-'+fmt(APPORT)+'</div></div>'+
+    (ptzAmt>0?'<div class="row-item"><div><div class="ri-label">PTZ (0%)</div><div class="ri-sub">quotite '+(ptz.quotite*100).toFixed(0)+'% — Zone '+ZONE+'</div></div><div class="ri-val green">-'+fmt(ptzAmt)+'</div></div>':'')+
+    (alLoan>0?'<div class="row-item"><div><div class="ri-label">Action Logement</div></div><div class="ri-val blue">-'+fmt(alLoan)+'</div></div>':'')+
+    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Bank loan needed</div></div><div class="ri-val blue" style="font-size:20px">'+fmt(bankNeeded)+'</div></div>'+
+    (usePTZ&&ptzAmt===0?'<div class="insight amber" style="margin-top:8px"><span class="icon">!</span><div>Not PTZ-eligible here: '+(TYPE!=='new'?'this property is not a new build.':'income reference ('+fmt(ptz.incRef)+') exceeds the Zone '+ZONE+' ceiling.')+'</div></div>':'');
+
+  document.getElementById('rv_interest').innerHTML=
+    '<div class="row-item"><div><div class="ri-label">Bank loan interest</div><div class="ri-sub">total over '+TERM+' years</div></div><div class="ri-val red">'+fmt(bankInterest)+'</div></div>'+
+    (alLoan>0?'<div class="row-item"><div><div class="ri-label">Action Logement interest</div><div class="ri-sub">~1% over '+TERM+' years</div></div><div class="ri-val red">'+fmt(alInterest)+'</div></div>':'')+
+    (ptzAmt>0?'<div class="row-item"><div><div class="ri-label">PTZ interest saved</div><div class="ri-sub">vs paying '+pct(RATE)+' on this amount</div></div><div class="ri-val green">'+fmt(ptzSave)+'</div></div>':'')+
+    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total repaid (loan + interest)</div></div><div class="ri-val" style="font-size:18px;font-weight:800">'+fmt(bankNeeded+bankInterest+alLoan+alInterest)+'</div></div>';
+
+  document.getElementById('rv_cash').innerHTML=
+    '<div class="row-item"><div><div class="ri-label">Deposit</div><div class="ri-sub">depot de garantie — '+(DEP_PCT*100).toFixed(1)+'%</div></div><div class="ri-val">'+fmt(deposit)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Notary fee</div><div class="ri-sub">'+(notaryRate*100).toFixed(1)+'% — '+(TYPE==='new'?'new build':'old property')+'</div></div><div class="ri-val">'+fmt(notaryFee)+'</div></div>'+
+    '<div class="row-item"><div><div class="ri-label">Furniture &amp; kitchen</div></div><div class="ri-val">'+fmt(FURN)+'</div></div>'+
+    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total cash needed upfront</div></div><div class="ri-val amber" style="font-size:20px">'+fmt(totalCash)+'</div></div>'+
+    '<div class="insight blue" style="margin-top:4px"><span class="icon">i</span><div>Deposit and furniture must come from liquid cash — PEE/PERCO funds are typically locked until you sign.</div></div>';
 }
 
 function buildSteps(steps,id){
@@ -1007,6 +1229,7 @@ function sendChat(){
 }
 
 calculate();
+calcReverse();
 updateQC();
 </script>
 
@@ -1023,6 +1246,7 @@ updateQC();
   <div style="text-align:center;margin-bottom:14px;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase">More screens</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
     <button onclick="go('profile',null,true)" style="padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px">&#128100; My Profile</button>
+    <button onclick="go('reverse',null,true)" style="padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px">&#128257; Property &#8594; EMI</button>
     <button onclick="go('compare',null,true)" style="padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px">&#9878;&#65039; New vs Old</button>
     <button onclick="go('process',null,true)" style="padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px">&#128203; Process</button>
     <button onclick="go('glossary',null,true)" style="padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px">&#128214; Glossary</button>
