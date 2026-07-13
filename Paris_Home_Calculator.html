@@ -498,7 +498,10 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
         <div class="ri-label" style="font-weight:700">Final Value</div>
         <div class="ri-val blue" style="font-size:18px" id="rv_final_value">--</div>
       </div>
-      <div class="field" style="margin-bottom:0"><label>Property Type</label><select id="rv_type" onchange="calcReverse()"><option value="new" selected>New build (VEFA)</option><option value="old">Old property (Ancien)</option></select></div>
+      <div class="field-row" style="margin-bottom:0">
+        <div class="field"><label>Property Type</label><select id="rv_type" onchange="calcReverse()"><option value="new" selected>New build (VEFA)</option><option value="old">Old property (Ancien)</option></select></div>
+        <div class="field"><label>Notary Fee Discount <span class="hint">(if offered)</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_notary_discount" value="0" step="100" oninput="calcReverse()"/></div></div>
+      </div>
     </div>
     <div class="form-section">
       <div class="form-section-title">Financing</div>
@@ -534,19 +537,19 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
         <div class="field"><label>Notary Fee %</label><div class="input-wrap has-suffix"><input type="number" id="rv_notary_pct" value="2.5" step="0.1" oninput="rvNotaryTouched=true;rvNot='pct';calcReverse()"/><span class="suffix">%</span></div></div>
         <div class="field"><label>Notary Fee &euro;</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_notary_amt" step="500" oninput="rvNotaryTouched=true;rvNot='amt';calcReverse()"/></div></div>
       </div>
-      <div class="field"><label>Furniture &amp; Kitchen <span class="hint" style="cursor:pointer;color:var(--blue)" onclick="toggleFurnDetail()" id="rv_furn_toggle">&#9662; breakdown</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_furniture_total" readonly style="background:var(--bg);font-weight:700"/></div></div>
+      <div class="field"><label>Furniture &amp; Kitchen <span class="hint" style="cursor:pointer;color:var(--blue)" onclick="toggleFurnDetail()" id="rv_furn_toggle">&#9662; breakdown</span> <span class="hint" style="cursor:pointer;color:var(--blue)" onclick="resetRvAuto('furn')">&#8635; auto-sum</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_furniture_total" step="100" oninput="rvTouch('furn')" style="font-weight:700"/></div></div>
       <div id="rv_furn_detail" style="display:none;background:var(--bg);border-radius:var(--radius-sm);padding:13px 15px 1px;margin:2px 0 4px">
         <div class="field-row">
-          <div class="field"><label>Kitchen</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_kitchen" value="5000" step="250" oninput="calcReverse()"/></div></div>
-          <div class="field"><label>Couch</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_couch" value="1500" step="100" oninput="calcReverse()"/></div></div>
+          <div class="field"><label>Kitchen</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_kitchen" value="5000" step="250" oninput="rvAutoTouched.furn=false;calcReverse()"/></div></div>
+          <div class="field"><label>Couch</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_couch" value="1500" step="100" oninput="rvAutoTouched.furn=false;calcReverse()"/></div></div>
         </div>
         <div class="field-row">
-          <div class="field"><label>Fridge</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_fridge" value="800" step="50" oninput="calcReverse()"/></div></div>
-          <div class="field"><label>Dishwasher</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_dishwasher" value="500" step="50" oninput="calcReverse()"/></div></div>
+          <div class="field"><label>Fridge</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_fridge" value="800" step="50" oninput="rvAutoTouched.furn=false;calcReverse()"/></div></div>
+          <div class="field"><label>Dishwasher</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_dishwasher" value="500" step="50" oninput="rvAutoTouched.furn=false;calcReverse()"/></div></div>
         </div>
         <div class="field-row">
-          <div class="field"><label>Washing Machine</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_washer" value="700" step="50" oninput="calcReverse()"/></div></div>
-          <div class="field"><label>Misc <span class="hint">(lighting, curtains, small items)</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_misc" value="1500" step="100" oninput="calcReverse()"/></div></div>
+          <div class="field"><label>Washing Machine</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_washer" value="700" step="50" oninput="rvAutoTouched.furn=false;calcReverse()"/></div></div>
+          <div class="field"><label>Misc <span class="hint">(lighting, curtains, small items)</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_misc" value="1500" step="100" oninput="rvAutoTouched.furn=false;calcReverse()"/></div></div>
         </div>
       </div>
     </div>
@@ -580,7 +583,7 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
     <div class="card-label" style="margin-bottom:10px">Cash Needed Upfront</div>
     <div class="stat-grid">
       <div class="stat-pill"><div class="sp-label">Deposit</div><div class="sp-val" id="rv_cash_deposit">--</div></div>
-      <div class="stat-pill"><div class="sp-label">Notary</div><div class="sp-val" id="rv_cash_notary">--</div></div>
+      <div class="stat-pill"><div class="sp-label">Notary</div><div class="sp-val" id="rv_cash_notary">--</div><div class="sp-sub" id="rv_cash_notary_sub"></div></div>
       <div class="stat-pill"><div class="sp-label">Furniture</div><div class="sp-val" id="rv_cash_furniture">--</div></div>
     </div>
     <div class="row-item" style="border-top:1.5px solid var(--border);padding-top:12px;margin-top:2px"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total cash needed</div></div><div class="ri-val amber" style="font-size:19px;font-weight:800" id="rv_cash_total">--</div></div>
@@ -982,7 +985,7 @@ function calculate(){
   renderGloss('');
 }
 
-var rvAutoTouched={ins:false,chg:false,taxe:false};
+var rvAutoTouched={ins:false,chg:false,taxe:false,furn:false};
 var rvDep='pct', rvNot='pct', rvNotaryTouched=false;
 function rvTouch(field){ rvAutoTouched[field]=true; calcReverse(); }
 function resetRvAuto(field){ rvAutoTouched[field]=false; calcReverse(); }
@@ -1038,7 +1041,8 @@ function calcReverse(){
   var FD=+document.getElementById('rv_f_dishwasher').value||0;
   var FW=+document.getElementById('rv_f_washer').value||0;
   var FM=+document.getElementById('rv_f_misc').value||0;
-  var FURN=FK+FC+FF+FD+FW+FM;
+  var FURN_SUM=FK+FC+FF+FD+FW+FM;
+  var FURN=rvAutoTouched.furn?(+document.getElementById('rv_furniture_total').value||0):FURN_SUM;
   document.getElementById('rv_furniture_total').value=Math.round(FURN);
 
   // Deposit — dual %/euro entry, either edit drives the other
@@ -1053,8 +1057,10 @@ function calcReverse(){
   else notaryFee=effPrice*(+document.getElementById('rv_notary_pct').value||0)/100;
   document.getElementById('rv_notary_pct').value=effPrice>0?(Math.round(notaryFee/effPrice*10000)/100):0;
   document.getElementById('rv_notary_amt').value=Math.round(notaryFee);
+  var notaryDiscount=+document.getElementById('rv_notary_discount').value||0;
+  var notaryFeeNet=Math.max(0,notaryFee-notaryDiscount);
 
-  var totalCash=deposit+notaryFee+FURN;
+  var totalCash=deposit+notaryFeeNet+FURN;
 
   document.getElementById('rv_final_value').textContent=fmt(effPrice);
 
@@ -1074,7 +1080,8 @@ function calcReverse(){
     (usePTZ&&ptzAmt>0&&TYPE!=='new'?'<div class="insight amber" style="margin-top:10px"><span class="icon">!</span><div>PTZ is normally only available for new-build (VEFA) purchases &mdash; double-check this applies here.</div></div>':'');
 
   document.getElementById('rv_cash_deposit').textContent=fmt(deposit);
-  document.getElementById('rv_cash_notary').textContent=fmt(notaryFee);
+  document.getElementById('rv_cash_notary').textContent=fmt(notaryFeeNet);
+  document.getElementById('rv_cash_notary_sub').textContent=notaryDiscount>0?'-'+fmt(notaryDiscount)+' offer':'';
   document.getElementById('rv_cash_furniture').textContent=fmt(FURN);
   document.getElementById('rv_cash_total').textContent=fmt(totalCash);
 
@@ -1087,10 +1094,10 @@ function calcReverse(){
 
 function rvGatherState(){
   var ids=['rv_price','rv_discount','rv_type','rv_apport','rv_term','rv_rate','rv_use_ptz','rv_ptz_amt',
-    'rv_al','rv_alamt','rv_insurance','rv_charges','rv_taxe','rv_deposit_pct','rv_deposit_amt','rv_notary_pct','rv_notary_amt',
-    'rv_f_kitchen','rv_f_couch','rv_f_fridge','rv_f_dishwasher','rv_f_washer','rv_f_misc'];
+    'rv_al','rv_alamt','rv_insurance','rv_charges','rv_taxe','rv_deposit_pct','rv_deposit_amt','rv_notary_pct','rv_notary_amt','rv_notary_discount',
+    'rv_furniture_total','rv_f_kitchen','rv_f_couch','rv_f_fridge','rv_f_dishwasher','rv_f_washer','rv_f_misc'];
   var s={ts:Date.now(),name:document.getElementById('rv_name').value.trim(),
-    autoTouched:{ins:rvAutoTouched.ins,chg:rvAutoTouched.chg,taxe:rvAutoTouched.taxe},
+    autoTouched:{ins:rvAutoTouched.ins,chg:rvAutoTouched.chg,taxe:rvAutoTouched.taxe,furn:rvAutoTouched.furn},
     dep:rvDep,not:rvNot,notaryTouched:rvNotaryTouched};
   ids.forEach(function(id){ s[id]=document.getElementById(id).value; });
   return s;
@@ -1115,7 +1122,7 @@ function loadRevCalc(i){
     var el=document.getElementById(k);
     if(el)el.value=s[k];
   });
-  rvAutoTouched=s.autoTouched?{ins:!!s.autoTouched.ins,chg:!!s.autoTouched.chg,taxe:!!s.autoTouched.taxe}:{ins:true,chg:true,taxe:true};
+  rvAutoTouched=s.autoTouched?{ins:!!s.autoTouched.ins,chg:!!s.autoTouched.chg,taxe:!!s.autoTouched.taxe,furn:!!s.autoTouched.furn}:{ins:true,chg:true,taxe:true,furn:true};
   rvDep=s.dep||'pct'; rvNot=s.not||'pct'; rvNotaryTouched=!!s.notaryTouched;
   calcReverse();
   window.scrollTo(0,0);
