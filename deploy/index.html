@@ -1043,7 +1043,13 @@ function calcReverse(){
   var TERM=+document.getElementById('rv_term').value||25;
   var RATE=(+document.getElementById('rv_rate').value||3.48)/100;
 
-  var bankNeeded=Math.max(0,effPrice-APPORT-ptzAmt-alLoan);
+  // Deposit — dual %/euro entry, either edit drives the other. It's cash paid at signing
+  // that's credited against the price at completion, so it reduces the bank loan needed.
+  var deposit=rvDep==='amt'?(+document.getElementById('rv_deposit_amt').value||0):effPrice*(+document.getElementById('rv_deposit_pct').value||0)/100;
+  document.getElementById('rv_deposit_pct').value=effPrice>0?(Math.round(deposit/effPrice*1000)/10):0;
+  document.getElementById('rv_deposit_amt').value=Math.round(deposit);
+
+  var bankNeeded=Math.max(0,effPrice-APPORT-deposit-ptzAmt-alLoan);
 
   // Insurance auto-estimate depends on the actual bank loan, so refine it now
   if(!rvAutoTouched.ins) document.getElementById('rv_insurance').value=Math.max(20,Math.round(bankNeeded*0.0004/5)*5);
@@ -1074,11 +1080,6 @@ function calcReverse(){
   var FURN=rvAutoTouched.furn?(+document.getElementById('rv_furniture_total').value||0):FURN_SUM;
   document.getElementById('rv_furniture_total').value=Math.round(FURN);
 
-  // Deposit — dual %/euro entry, either edit drives the other
-  var deposit=rvDep==='amt'?(+document.getElementById('rv_deposit_amt').value||0):effPrice*(+document.getElementById('rv_deposit_pct').value||0)/100;
-  document.getElementById('rv_deposit_pct').value=effPrice>0?(Math.round(deposit/effPrice*1000)/10):0;
-  document.getElementById('rv_deposit_amt').value=Math.round(deposit);
-
   // Notary — dual %/euro entry, auto-defaults by property type (2.5% new / 7.5% old) unless touched
   var notaryFee;
   if(!rvNotaryTouched) notaryFee=effPrice*(TYPE==='new'?0.025:0.075);
@@ -1102,6 +1103,7 @@ function calcReverse(){
 
   document.getElementById('rv_financing_line').innerHTML=
     'Final value <strong>'+fmt(effPrice)+'</strong> = Apport '+fmt(APPORT)+
+    ' + Deposit '+fmt(deposit)+
     (ptzAmt>0?' + PTZ '+fmt(ptzAmt):'')+
     (alLoan>0?' + Action Logement '+fmt(alLoan):'')+
     ' + <strong>Bank loan '+fmt(bankNeeded)+'</strong>';
