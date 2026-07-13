@@ -525,11 +525,16 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
       <div class="field"><label>Taxe Fonciere <span class="hint">(annual)</span> <span class="hint" style="cursor:pointer;color:var(--blue)" onclick="resetRvAuto('taxe')">&#8635; auto</span></label><div class="input-wrap has-suffix"><span class="prefix">&#8364;</span><input type="number" id="rv_taxe" value="1200" step="100" oninput="rvTouch('taxe')"/><span class="suffix">/yr</span></div></div>
     </div>
     <div class="form-section" style="margin-bottom:0">
-      <div class="form-section-title">Cash Required Upfront</div>
+      <div class="form-section-title">Cash Required Upfront <span class="hint">(deposit &amp; notary &mdash; edit % or &euro;, either updates the other)</span></div>
       <div class="field-row">
-        <div class="field"><label>Deposit <span class="hint">(depot de garantie)</span></label><div class="input-wrap has-suffix"><input type="number" id="rv_deposit_pct" value="5" step="0.5" oninput="calcReverse()"/><span class="suffix">%</span></div></div>
-        <div class="field"><label>Furniture &amp; Kitchen <span class="hint" style="cursor:pointer;color:var(--blue)" onclick="toggleFurnDetail()" id="rv_furn_toggle">&#9662; breakdown</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_furniture_total" readonly style="background:var(--bg);font-weight:700"/></div></div>
+        <div class="field"><label>Deposit % <span class="hint">(depot de garantie)</span></label><div class="input-wrap has-suffix"><input type="number" id="rv_deposit_pct" value="5" step="0.5" oninput="rvDep='pct';calcReverse()"/><span class="suffix">%</span></div></div>
+        <div class="field"><label>Deposit &euro;</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_deposit_amt" step="500" oninput="rvDep='amt';calcReverse()"/></div></div>
       </div>
+      <div class="field-row">
+        <div class="field"><label>Notary Fee %</label><div class="input-wrap has-suffix"><input type="number" id="rv_notary_pct" value="2.5" step="0.1" oninput="rvNotaryTouched=true;rvNot='pct';calcReverse()"/><span class="suffix">%</span></div></div>
+        <div class="field"><label>Notary Fee &euro;</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_notary_amt" step="500" oninput="rvNotaryTouched=true;rvNot='amt';calcReverse()"/></div></div>
+      </div>
+      <div class="field"><label>Furniture &amp; Kitchen <span class="hint" style="cursor:pointer;color:var(--blue)" onclick="toggleFurnDetail()" id="rv_furn_toggle">&#9662; breakdown</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_furniture_total" readonly style="background:var(--bg);font-weight:700"/></div></div>
       <div id="rv_furn_detail" style="display:none;background:var(--bg);border-radius:var(--radius-sm);padding:13px 15px 1px;margin:2px 0 4px">
         <div class="field-row">
           <div class="field"><label>Kitchen</label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_f_kitchen" value="5000" step="250" oninput="calcReverse()"/></div></div>
@@ -556,36 +561,32 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
   </div>
 
   <div class="hero-card blue-grad">
-    <div class="label">Base Mortgage EMI</div>
-    <div class="amount" id="rv_emi">--</div>
-    <div class="sub" id="rv_emi_sub">--</div>
+    <div class="label">Total Monthly Cost</div>
+    <div class="amount" id="rv_total_mo">--</div>
+    <div class="sub" id="rv_total_sub">--</div>
     <div class="hero-meta">
-      <div class="hm"><div class="hm-label">+ Insurance</div><div class="hm-val" id="rv_ins_m">--</div></div>
-      <div class="hm"><div class="hm-label">+ AL EMI</div><div class="hm-val" id="rv_al_m">--</div></div>
-      <div class="hm"><div class="hm-label">+ Charges &amp; Taxe</div><div class="hm-val" id="rv_ct_m">--</div></div>
+      <div class="hm"><div class="hm-label">Loan EMI (bank + AL)</div><div class="hm-val" id="rv_stat_loan">--</div></div>
+      <div class="hm"><div class="hm-label">Insurance + charges + taxe</div><div class="hm-val" id="rv_stat_other">--</div></div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-label" style="margin-bottom:2px">Total Monthly Cost (all-in)</div>
-    <div class="card-value green" id="rv_total_mo">--</div>
-    <div style="margin-top:10px" id="rv_monthly_breakdown"></div>
+    <div class="card-label" style="margin-bottom:6px">How It's Financed</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.6" id="rv_financing_line">--</div>
+    <div id="rv_financing_warn"></div>
   </div>
 
   <div class="card">
-    <div class="card-label" style="margin-bottom:10px">How the Price is Financed</div>
-    <div id="rv_financing"></div>
+    <div class="card-label" style="margin-bottom:10px">Cash Needed Upfront</div>
+    <div class="stat-grid">
+      <div class="stat-pill"><div class="sp-label">Deposit</div><div class="sp-val" id="rv_cash_deposit">--</div></div>
+      <div class="stat-pill"><div class="sp-label">Notary</div><div class="sp-val" id="rv_cash_notary">--</div></div>
+      <div class="stat-pill"><div class="sp-label">Furniture</div><div class="sp-val" id="rv_cash_furniture">--</div></div>
+    </div>
+    <div class="row-item" style="border-top:1.5px solid var(--border);padding-top:12px;margin-top:2px"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total cash needed</div></div><div class="ri-val amber" style="font-size:19px;font-weight:800" id="rv_cash_total">--</div></div>
   </div>
 
-  <div class="card">
-    <div class="card-label" style="margin-bottom:10px">Interest You'll Pay</div>
-    <div id="rv_interest"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-label" style="margin-bottom:10px">Cash Required Upfront (Before Moving In)</div>
-    <div id="rv_cash"></div>
-  </div>
+  <div class="insight blue"><span class="icon">&#8505;&#65039;</span><div id="rv_interest_note">--</div></div>
 </section>
 
 <section class="screen" id="screen-compare">
@@ -982,6 +983,7 @@ function calculate(){
 }
 
 var rvAutoTouched={ins:false,chg:false,taxe:false};
+var rvDep='pct', rvNot='pct', rvNotaryTouched=false;
 function rvTouch(field){ rvAutoTouched[field]=true; calcReverse(); }
 function resetRvAuto(field){ rvAutoTouched[field]=false; calcReverse(); }
 function toggleFurnDetail(){
@@ -1019,7 +1021,6 @@ function calcReverse(){
   var CHG=+document.getElementById('rv_charges').value||0;
   var TAXE_Y=+document.getElementById('rv_taxe').value||0;
   var TAXE_M=TAXE_Y/12;
-  var DEP_PCT=(+document.getElementById('rv_deposit_pct').value||0)/100;
 
   var AL_RATE=0.01;
   var alEmi=alLoan>0?monthly(alLoan,AL_RATE,TERM):0;
@@ -1040,56 +1041,57 @@ function calcReverse(){
   var FURN=FK+FC+FF+FD+FW+FM;
   document.getElementById('rv_furniture_total').value=Math.round(FURN);
 
-  var deposit=effPrice*DEP_PCT;
-  var notaryRate=TYPE==='new'?0.025:0.075;
-  var notaryFee=effPrice*notaryRate;
+  // Deposit — dual %/euro entry, either edit drives the other
+  var deposit=rvDep==='amt'?(+document.getElementById('rv_deposit_amt').value||0):effPrice*(+document.getElementById('rv_deposit_pct').value||0)/100;
+  document.getElementById('rv_deposit_pct').value=effPrice>0?(Math.round(deposit/effPrice*1000)/10):0;
+  document.getElementById('rv_deposit_amt').value=Math.round(deposit);
+
+  // Notary — dual %/euro entry, auto-defaults by property type (2.5% new / 7.5% old) unless touched
+  var notaryFee;
+  if(!rvNotaryTouched) notaryFee=effPrice*(TYPE==='new'?0.025:0.075);
+  else if(rvNot==='amt') notaryFee=+document.getElementById('rv_notary_amt').value||0;
+  else notaryFee=effPrice*(+document.getElementById('rv_notary_pct').value||0)/100;
+  document.getElementById('rv_notary_pct').value=effPrice>0?(Math.round(notaryFee/effPrice*10000)/100):0;
+  document.getElementById('rv_notary_amt').value=Math.round(notaryFee);
+
   var totalCash=deposit+notaryFee+FURN;
 
   document.getElementById('rv_final_value').textContent=fmt(effPrice);
-  document.getElementById('rv_emi').textContent=fmt(bankEmi);
-  document.getElementById('rv_emi_sub').textContent='Loan of '+fmt(bankNeeded)+' over '+TERM+' yrs at '+pct(RATE);
-  document.getElementById('rv_ins_m').textContent=fmt(INS)+'/mo';
-  document.getElementById('rv_al_m').textContent=alEmi>0?fmt(alEmi)+'/mo':'--';
-  document.getElementById('rv_ct_m').textContent=fmt(CHG+TAXE_M)+'/mo';
+
+  var loanEmi=bankEmi+alEmi;
+  var otherMonthly=INS+CHG+TAXE_M;
   document.getElementById('rv_total_mo').textContent=fmt(totalMonthly)+'/mo';
+  document.getElementById('rv_total_sub').textContent=(ptzAmt>0?'PTZ '+fmt(ptzAmt)+' reduces your loan &middot; ':'')+'Bank '+fmt(bankEmi)+'/mo'+(alEmi>0?' + AL '+fmt(alEmi)+'/mo':'')+' over '+TERM+' yrs at '+pct(RATE);
+  document.getElementById('rv_stat_loan').textContent=fmt(loanEmi)+'/mo';
+  document.getElementById('rv_stat_other').textContent=fmt(otherMonthly)+'/mo'+(!rvAutoTouched.ins||!rvAutoTouched.chg||!rvAutoTouched.taxe?' (est.)':'');
 
-  document.getElementById('rv_monthly_breakdown').innerHTML=
-    '<div class="row-item"><div><div class="ri-label">Bank EMI</div><div class="ri-sub">'+TERM+' yrs at '+pct(RATE)+'</div></div><div class="ri-val blue">'+fmt(bankEmi)+'/mo</div></div>'+
-    (alEmi>0?'<div class="row-item"><div><div class="ri-label">Action Logement EMI</div><div class="ri-sub">~1% over '+TERM+' yrs</div></div><div class="ri-val blue">'+fmt(alEmi)+'/mo</div></div>':'')+
-    '<div class="row-item"><div><div class="ri-label">Mortgage insurance</div>'+(!rvAutoTouched.ins?'<div class="ri-sub">auto-estimated</div>':'')+'</div><div class="ri-val">'+fmt(INS)+'/mo</div></div>'+
-    '<div class="row-item"><div><div class="ri-label">Property charges</div>'+(!rvAutoTouched.chg?'<div class="ri-sub">auto-estimated</div>':'')+'</div><div class="ri-val">'+fmt(CHG)+'/mo</div></div>'+
-    '<div class="row-item"><div><div class="ri-label">Taxe fonciere</div><div class="ri-sub">'+(!rvAutoTouched.taxe?'auto-estimated — ':'')+'annual / 12</div></div><div class="ri-val">'+fmt(TAXE_M)+'/mo</div></div>'+
-    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total all-in</div></div><div class="ri-val green" style="font-size:20px">'+fmt(totalMonthly)+'/mo</div></div>';
+  document.getElementById('rv_financing_line').innerHTML=
+    'Final value <strong>'+fmt(effPrice)+'</strong> = Apport '+fmt(APPORT)+
+    (ptzAmt>0?' + PTZ '+fmt(ptzAmt):'')+
+    (alLoan>0?' + Action Logement '+fmt(alLoan):'')+
+    ' + <strong>Bank loan '+fmt(bankNeeded)+'</strong>';
+  document.getElementById('rv_financing_warn').innerHTML=
+    (usePTZ&&ptzAmt>0&&TYPE!=='new'?'<div class="insight amber" style="margin-top:10px"><span class="icon">!</span><div>PTZ is normally only available for new-build (VEFA) purchases &mdash; double-check this applies here.</div></div>':'');
 
-  document.getElementById('rv_financing').innerHTML=
-    '<div class="row-item"><div><div class="ri-label">Property value</div></div><div class="ri-val">'+fmt(PRICE)+'</div></div>'+
-    (DISC>0?'<div class="row-item"><div><div class="ri-label">Discount / offer</div></div><div class="ri-val green">-'+fmt(DISC)+'</div></div>':'')+
-    '<div class="row-item"><div><div class="ri-label" style="font-weight:700">Final value</div></div><div class="ri-val" style="font-weight:700">'+fmt(effPrice)+'</div></div>'+
-    '<div class="row-item"><div><div class="ri-label">Your apport</div></div><div class="ri-val">-'+fmt(APPORT)+'</div></div>'+
-    (ptzAmt>0?'<div class="row-item"><div><div class="ri-label">PTZ (0%)</div></div><div class="ri-val green">-'+fmt(ptzAmt)+'</div></div>':'')+
-    (alLoan>0?'<div class="row-item"><div><div class="ri-label">Action Logement</div></div><div class="ri-val blue">-'+fmt(alLoan)+'</div></div>':'')+
-    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Bank loan needed</div></div><div class="ri-val blue" style="font-size:20px">'+fmt(bankNeeded)+'</div></div>'+
-    (usePTZ&&ptzAmt>0&&TYPE!=='new'?'<div class="insight amber" style="margin-top:8px"><span class="icon">!</span><div>PTZ is normally only available for new-build (VEFA) purchases &mdash; double-check this applies here.</div></div>':'');
+  document.getElementById('rv_cash_deposit').textContent=fmt(deposit);
+  document.getElementById('rv_cash_notary').textContent=fmt(notaryFee);
+  document.getElementById('rv_cash_furniture').textContent=fmt(FURN);
+  document.getElementById('rv_cash_total').textContent=fmt(totalCash);
 
-  document.getElementById('rv_interest').innerHTML=
-    '<div class="row-item"><div><div class="ri-label">Bank loan interest</div><div class="ri-sub">total over '+TERM+' years</div></div><div class="ri-val red">'+fmt(bankInterest)+'</div></div>'+
-    (alLoan>0?'<div class="row-item"><div><div class="ri-label">Action Logement interest</div><div class="ri-sub">~1% over '+TERM+' years</div></div><div class="ri-val red">'+fmt(alInterest)+'</div></div>':'')+
-    (ptzAmt>0?'<div class="row-item"><div><div class="ri-label">PTZ interest saved</div><div class="ri-sub">vs paying '+pct(RATE)+' on this amount</div></div><div class="ri-val green">'+fmt(ptzSave)+'</div></div>':'')+
-    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total repaid (loan + interest)</div></div><div class="ri-val" style="font-size:18px;font-weight:800">'+fmt(bankNeeded+bankInterest+alLoan+alInterest)+'</div></div>';
-
-  document.getElementById('rv_cash').innerHTML=
-    '<div class="row-item"><div><div class="ri-label">Deposit</div><div class="ri-sub">depot de garantie — '+(DEP_PCT*100).toFixed(1)+'%</div></div><div class="ri-val">'+fmt(deposit)+'</div></div>'+
-    '<div class="row-item"><div><div class="ri-label">Notary fee</div><div class="ri-sub">'+(notaryRate*100).toFixed(1)+'% — '+(TYPE==='new'?'new build':'old property')+'</div></div><div class="ri-val">'+fmt(notaryFee)+'</div></div>'+
-    '<div class="row-item"><div><div class="ri-label">Furniture &amp; kitchen</div><div class="ri-sub">kitchen, couch, fridge, dishwasher, washer, misc</div></div><div class="ri-val">'+fmt(FURN)+'</div></div>'+
-    '<div class="row-item" style="padding:14px 0"><div><div class="ri-label" style="font-weight:700;font-size:15px">Total cash needed upfront</div></div><div class="ri-val amber" style="font-size:20px">'+fmt(totalCash)+'</div></div>'+
-    '<div class="insight blue" style="margin-top:4px"><span class="icon">i</span><div>Deposit and furniture must come from liquid cash — PEE/PERCO funds are typically locked until you sign.</div></div>';
+  document.getElementById('rv_interest_note').innerHTML=
+    'Over '+TERM+' years: bank interest ~'+fmt(bankInterest)+
+    (alLoan>0?', Action Logement interest ~'+fmt(alInterest):'')+
+    (ptzAmt>0?'. PTZ saves you ~'+fmt(ptzSave)+' vs a market-rate loan on that amount.':'.')+
+    ' Deposit &amp; furniture must come from liquid cash — PEE/PERCO stays locked until you sign.';
 }
 
 function rvGatherState(){
   var ids=['rv_price','rv_discount','rv_type','rv_apport','rv_term','rv_rate','rv_use_ptz','rv_ptz_amt',
-    'rv_al','rv_alamt','rv_insurance','rv_charges','rv_taxe','rv_deposit_pct',
+    'rv_al','rv_alamt','rv_insurance','rv_charges','rv_taxe','rv_deposit_pct','rv_deposit_amt','rv_notary_pct','rv_notary_amt',
     'rv_f_kitchen','rv_f_couch','rv_f_fridge','rv_f_dishwasher','rv_f_washer','rv_f_misc'];
-  var s={ts:Date.now(),name:document.getElementById('rv_name').value.trim(),autoTouched:{ins:rvAutoTouched.ins,chg:rvAutoTouched.chg,taxe:rvAutoTouched.taxe}};
+  var s={ts:Date.now(),name:document.getElementById('rv_name').value.trim(),
+    autoTouched:{ins:rvAutoTouched.ins,chg:rvAutoTouched.chg,taxe:rvAutoTouched.taxe},
+    dep:rvDep,not:rvNot,notaryTouched:rvNotaryTouched};
   ids.forEach(function(id){ s[id]=document.getElementById(id).value; });
   return s;
 }
@@ -1109,11 +1111,12 @@ function loadRevCalc(i){
   if(!s)return;
   document.getElementById('rv_name').value=s.name||'';
   Object.keys(s).forEach(function(k){
-    if(k==='ts'||k==='name'||k==='autoTouched')return;
+    if(k==='ts'||k==='name'||k==='autoTouched'||k==='dep'||k==='not'||k==='notaryTouched')return;
     var el=document.getElementById(k);
     if(el)el.value=s[k];
   });
   rvAutoTouched=s.autoTouched?{ins:!!s.autoTouched.ins,chg:!!s.autoTouched.chg,taxe:!!s.autoTouched.taxe}:{ins:true,chg:true,taxe:true};
+  rvDep=s.dep||'pct'; rvNot=s.not||'pct'; rvNotaryTouched=!!s.notaryTouched;
   calcReverse();
   window.scrollTo(0,0);
 }
