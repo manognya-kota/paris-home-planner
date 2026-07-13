@@ -558,6 +558,7 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
   <div class="card">
     <div class="form-section" style="margin-bottom:0">
       <div class="form-section-title">Save for Later <span class="hint">(optional)</span></div>
+      <div class="field"><label>Notes <span class="hint">total area, garden/terrace, anything to remember it by</span></label><textarea id="rv_notes" placeholder="e.g. 68.8m&sup2; weighted, south-facing, 8.3m&sup2; terrace + small garden" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);resize:vertical;min-height:60px"></textarea></div>
       <button class="calc-btn" style="background:var(--green);margin-bottom:12px" onclick="saveRevCalc()">&#128190; Save This Calculation</button>
       <div id="rv_saved_list"></div>
     </div>
@@ -1128,6 +1129,7 @@ function rvGatherState(){
     'rv_al','rv_alamt','rv_insurance','rv_charges','rv_taxe','rv_deposit_pct','rv_deposit_amt','rv_notary_pct','rv_notary_amt','rv_notary_discount',
     'rv_furniture_total','rv_f_kitchen','rv_f_couch','rv_f_fridge','rv_f_dishwasher','rv_f_washer','rv_f_misc'];
   var s={ts:Date.now(),name:document.getElementById('rv_name').value.trim(),
+    notes:document.getElementById('rv_notes').value.trim(),
     autoTouched:{ins:rvAutoTouched.ins,chg:rvAutoTouched.chg,taxe:rvAutoTouched.taxe,furn:rvAutoTouched.furn},
     dep:rvDep,not:rvNot,notaryTouched:rvNotaryTouched,customFurn:rvCustomFurn.slice()};
   ids.forEach(function(id){ s[id]=document.getElementById(id).value; });
@@ -1148,8 +1150,9 @@ function loadRevCalc(i){
   var s=list[i];
   if(!s)return;
   document.getElementById('rv_name').value=s.name||'';
+  document.getElementById('rv_notes').value=s.notes||'';
   Object.keys(s).forEach(function(k){
-    if(k==='ts'||k==='name'||k==='autoTouched'||k==='dep'||k==='not'||k==='notaryTouched'||k==='customFurn')return;
+    if(k==='ts'||k==='name'||k==='notes'||k==='autoTouched'||k==='dep'||k==='not'||k==='notaryTouched'||k==='customFurn')return;
     var el=document.getElementById(k);
     if(el)el.value=s[k];
   });
@@ -1173,7 +1176,10 @@ function renderSavedCalcs(){
   if(!list.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted)">No saved calculations yet.</div>'; return; }
   el.innerHTML=list.map(function(s,i){
     var price=+s.rv_price||0,disc=+s.rv_discount||0,eff=Math.max(0,price-disc);
-    return '<div class="row-item"><div><div class="ri-label">'+(s.name||'Untitled')+'</div><div class="ri-sub">'+fmt(eff)+' &middot; saved '+new Date(s.ts).toLocaleDateString('fr-FR')+'</div></div>'+
+    var notesPreview=(s.notes||'').trim();
+    if(notesPreview.length>90) notesPreview=notesPreview.slice(0,90)+'…';
+    return '<div class="row-item" style="align-items:flex-start"><div><div class="ri-label">'+(s.name||'Untitled')+'</div><div class="ri-sub">'+fmt(eff)+' &middot; saved '+new Date(s.ts).toLocaleDateString('fr-FR')+'</div>'+
+      (notesPreview?'<div class="ri-sub" style="margin-top:3px;font-style:italic">'+notesPreview+'</div>':'')+'</div>'+
       '<div style="display:flex;gap:6px;flex-shrink:0"><button class="calc-btn" style="width:auto;padding:6px 12px;font-size:12px" onclick="loadRevCalc('+i+')">Load</button>'+
       '<button class="calc-btn" style="width:auto;padding:6px 12px;font-size:12px;background:var(--red)" onclick="deleteRevCalc('+i+')">Delete</button></div></div>';
   }).join('');
