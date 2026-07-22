@@ -513,9 +513,22 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
         <div class="field"><label>PTZ Amount <span class="hint">from courtier/bank sim</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_ptz_amt" value="90000" step="1000" oninput="calcReverse()"/></div></div>
       </div>
       <div class="field-row">
+        <div class="field"><label>PTZ Deferral Period <span class="hint">(differe — 0 repayment)</span></label><div class="input-wrap has-suffix"><input type="number" id="rv_ptz_deferral" value="2" step="1" min="0" oninput="calcReverse()"/><span class="suffix">yrs</span></div></div>
+        <div class="field"><label>PTZ Repayment Period <span class="hint">(after deferral ends)</span></label><div class="input-wrap has-suffix"><input type="number" id="rv_ptz_repay_years" value="13" step="1" min="1" oninput="calcReverse()"/><span class="suffix">yrs</span></div></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin:-8px 0 12px;line-height:1.5">Per current PTZ rules: Tranche 1 = 10yr defer + 15yr repay; Tranche 2 = 8+12; Tranche 3 = 2+13; Tranche 4 = 0+10. Confirm your tranche with your courtier &mdash; defaults here assume Tranche 3.</div>
+      <div class="field-row">
         <div class="field"><label>Action Logement eligible?</label><select id="rv_al" onchange="calcReverse()"><option value="yes" selected>Yes</option><option value="no">No / Unknown</option></select></div>
         <div class="field"><label>Action Logement amount <span class="hint">up to 40k at ~1%</span></label><div class="input-wrap"><span class="prefix">&#8364;</span><input type="number" id="rv_alamt" value="30000" step="1000" max="40000" oninput="calcReverse()"/></div></div>
       </div>
+    </div>
+    <div class="form-section" id="rv_construction_section">
+      <div class="form-section-title">Construction Period <span class="hint">(VEFA only &mdash; interim interest before delivery)</span></div>
+      <div class="field-row">
+        <div class="field"><label>Construction Duration</label><div class="input-wrap has-suffix"><input type="number" id="rv_construction_months" value="18" step="1" min="0" oninput="calcReverse()"/><span class="suffix">mo</span></div></div>
+        <div class="field"><label>Avg % of Loan Drawn <span class="hint">(progress payments over the build)</span></label><div class="input-wrap has-suffix"><input type="number" id="rv_construction_avg_pct" value="50" step="5" min="0" max="100" oninput="calcReverse()"/><span class="suffix">%</span></div></div>
+      </div>
+      <div class="field" style="margin-bottom:0"><label>Payment During Construction</label><select id="rv_construction_defer" onchange="calcReverse()"><option value="yes" selected>Franchise totale &mdash; defer interest, capitalize into loan</option><option value="no">Pay interim interest monthly (frais intercalaires)</option></select></div>
     </div>
     <div class="form-section">
       <div class="form-section-title">Monthly Running Costs <span class="hint">(auto-estimated from property value &mdash; edit anytime)</span></div>
@@ -572,6 +585,16 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
       <div class="hm"><div class="hm-label">Loan EMI (bank + AL)</div><div class="hm-val" id="rv_stat_loan">--</div></div>
       <div class="hm"><div class="hm-label">Insurance + charges + taxe</div><div class="hm-val" id="rv_stat_other">--</div></div>
     </div>
+  </div>
+
+  <div class="card" id="rv_construction_card" style="display:none">
+    <div class="card-label" style="margin-bottom:6px">Construction Period (VEFA)</div>
+    <div id="rv_construction_text"></div>
+  </div>
+
+  <div class="card" id="rv_ptz_step_card" style="display:none">
+    <div class="card-label" style="margin-bottom:6px">PTZ Deferral Ends &mdash; Your EMI Will Change</div>
+    <div id="rv_ptz_step_text"></div>
   </div>
 
   <div class="card">
@@ -1052,6 +1075,23 @@ function calcReverse(){
 
   var bankNeeded=Math.max(0,effPrice-APPORT-deposit-ptzAmt-alLoan);
 
+  // Construction period (VEFA) — during the build, the bank releases the loan in stages (appels
+  // de fonds) rather than all at once, so interest only accrues on the average amount actually
+  // drawn. With "franchise totale" that interim interest isn't paid monthly — it's added to
+  // (capitalized into) the loan principal, so your real post-delivery loan is bigger than the
+  // nominal bank loan needed. Without it, you pay that interim interest out of pocket each month.
+  var constrMonths=TYPE==='new'?Math.max(0,+document.getElementById('rv_construction_months').value||0):0;
+  var constrAvgPct=Math.max(0,Math.min(100,+document.getElementById('rv_construction_avg_pct').value||0));
+  var constrDefer=document.getElementById('rv_construction_defer').value==='yes';
+  var constrInterest=0, constrMonthlyInterim=0, effectiveBankNeeded=bankNeeded;
+  if(constrMonths>0&&bankNeeded>0){
+    var avgDrawn=bankNeeded*constrAvgPct/100;
+    constrMonthlyInterim=avgDrawn*RATE/12;
+    constrInterest=constrMonthlyInterim*constrMonths;
+    if(constrDefer) effectiveBankNeeded=bankNeeded+constrInterest;
+  }
+  var showConstruction=constrMonths>0&&bankNeeded>0;
+
   // Insurance auto-estimate depends on the actual bank loan, so refine it now
   if(!rvAutoTouched.ins) document.getElementById('rv_insurance').value=Math.max(20,Math.round(bankNeeded*0.0004/5)*5);
 
@@ -1064,11 +1104,40 @@ function calcReverse(){
   var alEmi=alLoan>0?monthly(alLoan,AL_RATE,TERM):0;
   var alInterest=alLoan>0?Math.max(0,alEmi*TERM*12-alLoan):0;
 
-  var bankEmi=monthly(bankNeeded,RATE,TERM);
-  var bankInterest=Math.max(0,bankEmi*TERM*12-bankNeeded);
+  var bankEmi=monthly(effectiveBankNeeded,RATE,TERM);
+  var bankInterest=Math.max(0,bankEmi*TERM*12-effectiveBankNeeded);
   var ptzSave=ptzAmt*RATE*TERM*0.5;
 
   var totalMonthly=bankEmi+INS+alEmi+CHG+TAXE_M;
+
+  // PTZ deferral (differe) — PTZ is 0% but not free forever. During the deferral period you pay
+  // nothing on it; once it ends, PTZ repayment starts and your EMI steps up. Some banks offer
+  // "lissage de pret" (loan smoothing) instead, restructuring the bank loan so the combined
+  // payment stays level across the whole term rather than jumping.
+  var ptzDeferral=Math.min(Math.max(TERM-1,0),Math.max(0,+document.getElementById('rv_ptz_deferral').value||0));
+  var ptzRepayYears=Math.max(1,+document.getElementById('rv_ptz_repay_years').value||13);
+  var ptzEmiFuture=(ptzAmt>0&&ptzRepayYears>0)?ptzAmt/(ptzRepayYears*12):0;
+  var monthlyPhase1=bankEmi+alEmi+INS+CHG+TAXE_M;
+  var monthlyPhase2=bankEmi+alEmi+ptzEmiFuture+INS+CHG+TAXE_M;
+  // PTZ repayment period is fixed by income tranche (e.g. 13yrs for tranche 3), independent of
+  // the main bank loan term — so PTZ can finish paying off before or after the bank loan does.
+  var N1=ptzDeferral*12, N2=ptzRepayYears*12, N3=Math.max(0,TERM*12-N1-N2);
+  var monthlyPhase3=bankEmi+alEmi+INS+CHG+TAXE_M; // PTZ paid off — back to bank+AL only
+  var ptzJump=monthlyPhase2-monthlyPhase1;
+  var ptzJumpPct=monthlyPhase1>0?(ptzJump/monthlyPhase1*100):0;
+  var smoothedTotal=null;
+  if(ptzAmt>0&&ptzDeferral>0&&ptzRepayYears>0&&effectiveBankNeeded>0){
+    var rm=RATE/12;
+    var A1=Math.pow(1+rm,N1);
+    var FV=function(n){ return rm===0?n:(Math.pow(1+rm,n)-1)/rm; };
+    var PV=function(n){ return rm===0?n:(1-Math.pow(1+rm,-n))/rm; };
+    var ptzM=ptzAmt/N2;
+    var denom=PV(N3)+FV(N1)*Math.pow(1+rm,N2)+FV(N2);
+    var smoothedBankM=(effectiveBankNeeded*Math.pow(1+rm,N1+N2)+ptzM*FV(N2))/denom;
+    smoothedTotal=smoothedBankM+alEmi+INS+CHG+TAXE_M;
+  }
+  var showPtzStep=ptzAmt>0&&ptzDeferral>0&&ptzRepayYears>0;
+  var showPostPayoffPhase=showPtzStep&&N3>0;
 
   var FK=+document.getElementById('rv_f_kitchen').value||0;
   var FC=+document.getElementById('rv_f_couch').value||0;
@@ -1098,16 +1167,40 @@ function calcReverse(){
   var loanEmi=bankEmi+alEmi;
   var otherMonthly=INS+CHG+TAXE_M;
   document.getElementById('rv_total_mo').textContent=fmt(totalMonthly)+'/mo';
-  document.getElementById('rv_total_sub').textContent=(ptzAmt>0?'PTZ '+fmt(ptzAmt)+' reduces your loan &middot; ':'')+'Bank '+fmt(bankEmi)+'/mo'+(alEmi>0?' + AL '+fmt(alEmi)+'/mo':'')+' over '+TERM+' yrs at '+pct(RATE);
+  document.getElementById('rv_total_sub').textContent=(ptzAmt>0?'PTZ '+fmt(ptzAmt)+' reduces your loan'+(showPtzStep?' &middot; years 1&ndash;'+ptzDeferral+' only, see below':'')+' &middot; ':'')+'Bank '+fmt(bankEmi)+'/mo'+(alEmi>0?' + AL '+fmt(alEmi)+'/mo':'')+' over '+TERM+' yrs at '+pct(RATE);
   document.getElementById('rv_stat_loan').textContent=fmt(loanEmi)+'/mo';
   document.getElementById('rv_stat_other').textContent=fmt(otherMonthly)+'/mo'+(!rvAutoTouched.ins||!rvAutoTouched.chg||!rvAutoTouched.taxe?' (est.)':'');
+
+  document.getElementById('rv_construction_card').style.display=showConstruction?'block':'none';
+  if(showConstruction){
+    document.getElementById('rv_construction_text').innerHTML=
+      (constrDefer?
+        '<div class="row-item"><div><div class="ri-label">Interim interest during construction <span class="hint">('+constrMonths+' mo, ~'+constrAvgPct+'% of loan drawn on average)</span></div><div class="ri-sub">not paid monthly &mdash; capitalized into the loan instead</div></div><div class="ri-val" style="font-weight:800">+'+fmt(constrInterest)+'</div></div>'+
+        '<div class="insight amber" style="margin:10px 0 0"><span class="icon">!</span><div><strong>Your real post-delivery loan is '+fmt(effectiveBankNeeded)+'</strong>, not '+fmt(bankNeeded)+' &mdash; the '+fmt(constrInterest)+' in unpaid construction-period interest gets added to principal (franchise totale), so your EMI above already reflects the bigger loan.</div></div>'
+        :
+        '<div class="row-item"><div><div class="ri-label">Interim interest during construction <span class="hint">(frais intercalaires, '+constrMonths+' mo, ~'+constrAvgPct+'% of loan drawn on average)</span></div><div class="ri-sub">paid monthly out of pocket, on top of any rent you may be paying &mdash; not included in the EMI above</div></div><div class="ri-val red" style="font-weight:800">~'+fmt(constrMonthlyInterim)+'/mo</div></div>'+
+        '<div class="row-item"><div><div class="ri-label">Total interim interest over construction</div></div><div class="ri-val">'+fmt(constrInterest)+'</div></div>'
+      );
+  }
+
+  document.getElementById('rv_ptz_step_card').style.display=showPtzStep?'block':'none';
+  if(showPtzStep){
+    var ptzPayoffYear=ptzDeferral+ptzRepayYears;
+    document.getElementById('rv_ptz_step_text').innerHTML=
+      '<div class="row-item"><div><div class="ri-label">Years 1&ndash;'+ptzDeferral+' <span class="hint">(PTZ deferred, 0 repayment)</span></div></div><div class="ri-val">'+fmt(monthlyPhase1)+'/mo</div></div>'+
+      '<div class="row-item"><div><div class="ri-label">Year '+(ptzDeferral+1)+(showPostPayoffPhase?'&ndash;'+ptzPayoffYear:' onward')+' <span class="hint">(PTZ repayment, '+ptzRepayYears+' yrs)</span></div><div class="ri-sub">+'+fmt(ptzEmiFuture)+'/mo for PTZ, over '+ptzRepayYears+' yrs at 0% interest</div></div><div class="ri-val red" style="font-weight:800">'+fmt(monthlyPhase2)+'/mo</div></div>'+
+      (showPostPayoffPhase?'<div class="row-item"><div><div class="ri-label">Year '+(ptzPayoffYear+1)+' onward <span class="hint">(PTZ paid off)</span></div><div class="ri-sub">drops back to bank + AL only, for the remaining '+Math.round(N3/12)+' yrs of the '+TERM+'-yr term</div></div><div class="ri-val" style="font-weight:800">'+fmt(monthlyPhase3)+'/mo</div></div>':'')+
+      '<div class="insight amber" style="margin:10px 0 0"><span class="icon">!</span><div><strong>Your EMI increases by '+fmt(ptzJump)+'/mo (+'+ptzJumpPct.toFixed(0)+'%)</strong> once PTZ repayment starts'+(showPostPayoffPhase?', then drops back down in year '+(ptzPayoffYear+1)+' once the PTZ is paid off':'')+'. Budget to the Year '+(ptzDeferral+1)+' number, not the deferral-period number.</div></div>'+
+      (smoothedTotal!==null?'<div class="row-item" style="border-top:1.5px solid var(--border);padding-top:12px;margin-top:10px"><div><div class="ri-label" style="font-weight:700">With loan smoothing <span class="hint">(lissage de pret &mdash; ask your bank/courtier)</span></div><div class="ri-sub">restructures the bank loan so payment stays level for the whole '+TERM+'-year term instead of stepping up'+(showPostPayoffPhase?' (PTZ payoff at year '+ptzPayoffYear+' absorbed into the smoothing)':'')+'</div></div><div class="ri-val green" style="font-weight:800;font-size:16px">'+fmt(smoothedTotal)+'/mo</div></div>':'');
+  }
 
   document.getElementById('rv_financing_line').innerHTML=
     'Final value <strong>'+fmt(effPrice)+'</strong> = Apport '+fmt(APPORT)+
     ' + Deposit '+fmt(deposit)+
     (ptzAmt>0?' + PTZ '+fmt(ptzAmt):'')+
     (alLoan>0?' + Action Logement '+fmt(alLoan):'')+
-    ' + <strong>Bank loan '+fmt(bankNeeded)+'</strong>';
+    ' + <strong>Bank loan '+fmt(bankNeeded)+'</strong>'+
+    (showConstruction&&constrDefer?' + '+fmt(constrInterest)+' capitalized construction interest = <strong>'+fmt(effectiveBankNeeded)+' financed</strong>':'');
   document.getElementById('rv_financing_warn').innerHTML=
     (usePTZ&&ptzAmt>0&&TYPE!=='new'?'<div class="insight amber" style="margin-top:10px"><span class="icon">!</span><div>PTZ is normally only available for new-build (VEFA) purchases &mdash; double-check this applies here.</div></div>':'');
 
@@ -1119,15 +1212,17 @@ function calcReverse(){
 
   document.getElementById('rv_interest_note').innerHTML=
     'Over '+TERM+' years: bank interest ~'+fmt(bankInterest)+
+    (showConstruction?(constrDefer?' (includes '+fmt(constrInterest)+' capitalized construction-period interest)':', plus ~'+fmt(constrInterest)+' interim interest paid separately during construction'):'')+
     (alLoan>0?', Action Logement interest ~'+fmt(alInterest):'')+
     (ptzAmt>0?'. PTZ saves you ~'+fmt(ptzSave)+' vs a market-rate loan on that amount.':'.')+
     ' Deposit &amp; furniture must come from liquid cash — PEE/PERCO stays locked until you sign.';
 }
 
 function rvGatherState(){
-  var ids=['rv_price','rv_discount','rv_type','rv_apport','rv_term','rv_rate','rv_use_ptz','rv_ptz_amt',
+  var ids=['rv_price','rv_discount','rv_type','rv_apport','rv_term','rv_rate','rv_use_ptz','rv_ptz_amt','rv_ptz_deferral','rv_ptz_repay_years',
     'rv_al','rv_alamt','rv_insurance','rv_charges','rv_taxe','rv_deposit_pct','rv_deposit_amt','rv_notary_pct','rv_notary_amt','rv_notary_discount',
-    'rv_furniture_total','rv_f_kitchen','rv_f_couch','rv_f_fridge','rv_f_dishwasher','rv_f_washer','rv_f_misc'];
+    'rv_furniture_total','rv_f_kitchen','rv_f_couch','rv_f_fridge','rv_f_dishwasher','rv_f_washer','rv_f_misc',
+    'rv_construction_months','rv_construction_avg_pct','rv_construction_defer'];
   var s={ts:Date.now(),name:document.getElementById('rv_name').value.trim(),
     notes:document.getElementById('rv_notes').value.trim(),
     autoTouched:{ins:rvAutoTouched.ins,chg:rvAutoTouched.chg,taxe:rvAutoTouched.taxe,furn:rvAutoTouched.furn},
